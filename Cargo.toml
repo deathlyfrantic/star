@@ -1,0 +1,8 @@
+[package]
+name = "star"
+version = "0.1.0"
+authors = ["Zandr Martin <git@zandr.me>"]
+
+[dependencies]
+termsize = "0.1.5"
+isatty = "0.1.7"
