@@ -1,58 +1,107 @@
-use std::io::{self, BufRead};
-// use std::fs::File;
-// use std::io::prelude::*;
-use std::process::exit;
+extern crate libc;
+extern crate regex;
+extern crate termion;
+
+use termion::event::Key;
+use termion::input::TermRead;
 
 mod score;
 mod console;
 mod render;
-mod ansi;
 
-fn run<'a>(stdin_lines: Vec<String>) -> Result<&'a str, &'a str> {
-    let console = console::Console::new()?;
-    console.configure();
+use render::Renderer;
 
-    let query = &['f', 'o', 'o', 'b', 'a', 'r'];
+use std::io::{self, BufRead};
+use std::process::exit;
 
-    let mut scores: Vec<score::Score> = stdin_lines
+fn get_scores<'a>(
+    lines: &'a Vec<String>,
+    query: &[char],
+) -> Vec<score::Score<'a>> {
+    lines
         .iter()
         .filter_map(|line| score::calculate_score(line, query))
-        .collect();
-    scores.sort_unstable_by(|a, b| a.points.cmp(&b.points));
+        .collect()
+}
 
-    let renderer = render::Renderer::new(&scores, &console, query);
+fn run<'a>(stdin_lines: Vec<String>) -> Result<String, &'a str> {
+    let console = console::Console::new()?;
+    let mut query: Vec<char> = vec![];
+    let tty = termion::get_tty().unwrap();
+    let mut dirty = false;
+    let mut selected = 0;
 
-    println!("{:?}", console);
+    let scores = get_scores(&stdin_lines, &query);
+
+    let renderer = Renderer::new(&scores, &console, "", selected);
     renderer.render();
 
-    // loop {}
-    console.restore();
-    Ok("foo")
+    for c in tty.keys() {
+        match c.unwrap() {
+            Key::Ctrl('c') | Key::Esc => return Err("ctrl-c"),
+            Key::Ctrl('n') | Key::Down => {
+                // move selection down
+                if selected < 20 {
+                    selected += 1;
+                    dirty = true;
+                }
+            }
+            Key::Ctrl('p') | Key::Up => {
+                // move selection up
+                if selected > 0 {
+                    selected -= 1;
+                    dirty = true;
+                }
+            }
+            Key::Ctrl('w') => {
+                // delete word
+            }
+            Key::Ctrl('u') => {
+                query.clear();
+                dirty = true;
+            }
+            Key::Backspace => {
+                if query.len() > 0 {
+                    query.pop();
+                    dirty = true;
+                }
+            }
+            Key::Char('\n') => {
+                let rv = String::from(scores[selected].line);
+                renderer.clear();
+                return Ok(rv);
+            }
+            Key::Char(c) => {
+                query.push(c);
+                dirty = true;
+            }
+            _ => {}
+        }
+
+        if dirty {
+            let scores = get_scores(&stdin_lines, &query);
+            let query_str = query.iter().collect::<String>();
+            let renderer =
+                Renderer::new(&scores, &console, query_str.as_str(), selected);
+            renderer.render();
+            dirty = false;
+        }
+    }
+
+    Ok("foo".to_string())
 }
 
 fn main() {
     let stdin = io::stdin();
-    let mut stdin_lines: Vec<String> =
+    let stdin_lines: Vec<String> =
         stdin.lock().lines().filter_map(|line| line.ok()).collect();
 
-    stdin_lines.sort_unstable();
-    stdin_lines.dedup();
-    // let mut f = File::create("output.txt").unwrap();
-    // for line in &lines {
-    //     let _r = f.write_all(line.line.as_bytes());
-    //     let _r = f.write_all(b"\n");
-    // }
-
-    // println!(
-    //     "total lines {}, total matches: {}",
-    //     stdin_lines.len(),
-    //     lines.len()
-    // );
-    // println!("{:?}", lines);
-
     match run(stdin_lines) {
-        // Ok(l) => println!("{}", l),
-        Ok(_) => (),
-        Err(_) => exit(1),
+        Ok(l) => println!("{}", l),
+        Err(_) => unsafe {
+            println!("!ctrl-c!");
+            libc::killpg(libc::getpgrp(), libc::SIGINT);
+            exit(1);
+        },
     };
 }
