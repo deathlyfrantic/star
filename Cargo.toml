@@ -4,5 +4,6 @@ version = "0.1.0"
 authors = ["Zandr Martin <zandrmartin@gmail.com>"]
 
 [dependencies]
-termsize = "0.1.5"
-isatty = "0.1.7"
+termion = "1.5.1"
+regex = "0.2.10"
+libc = "0.2.40"

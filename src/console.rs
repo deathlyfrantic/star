@@ -1,12 +1,7 @@
-extern crate isatty;
-extern crate termsize;
+use termion::{self, cursor};
 
-use std;
-use std::fs;
-use std::io::prelude::*;
+use std::io::Write;
 use std::process::Command;
-
-use ansi;
 
 #[derive(Debug)]
 pub struct Console {
@@ -17,60 +12,51 @@ pub struct Console {
 
 impl Console {
     pub fn new<'a>() -> Result<Console, &'a str> {
-        if !isatty::stdout_isatty() {
+        if !termion::is_tty(&termion::get_tty().unwrap()) {
             return Err("not a TTY");
         }
 
-        let (width, height) = match termsize::get() {
-            Some(size) => (size.cols, size.rows),
-            None => (80, 25),
+        let (width, height) = match termion::terminal_size() {
+            Ok(size) => size,
+            Err(_) => return Err("not a TTY"),
         };
+
+        let original_state = match stty(&["-g"]) {
+            Some(s) => s,
+            None => "".to_string(),
+        };
+
+        stty(&["raw", "-echo", "-icanon"]);
 
         Ok(Console {
             width: width,
             height: height,
-            original_state: match stty(&["-g"]) {
-                Some(output) => output.trim_right_matches("\n").to_string(),
-                None => "".to_string(),
-            },
+            original_state: original_state,
         })
     }
 
-    pub fn restore(&self) -> Option<String> {
-        stty(&[self.original_state.as_str()])
-    }
-
-    pub fn configure(&self) -> Option<String> {
-        stty(&["-echo", "-icanon"])
-    }
-
-    pub fn write(&self, buf: &[u8]) {
-        let mut f = fs::OpenOptions::new()
-            .write(true)
-            .read(true)
-            .open("/dev/tty")
-            .expect("unable to open /dev/tty");
-        let _ = f.write_all(ansi::hide_cursor().as_bytes());
-        let _ = f.write_all(buf);
-        let _ = f.write_all(ansi::show_cursor().as_bytes());
+    pub fn write(&self, buf: &str) {
+        let mut tty = termion::get_tty().unwrap();
+        let _ = write!(tty, "{}", cursor::Hide);
+        let _ = write!(tty, "{}", buf);
+        let _ = write!(tty, "{}", cursor::Show);
+        let _ = tty.flush();
     }
 
     pub fn write_lines(&self, lines: Vec<String>) {
-        let mut buf = lines.join("\n");
-        buf.push_str("\n");
-        self.write(buf.as_bytes());
+        self.write(lines.join("\r\n").as_str());
+    }
+}
+
+impl Drop for Console {
+    fn drop(&mut self) {
+        stty(&[self.original_state.as_str()]);
     }
 }
 
 fn stty(args: &[&str]) -> Option<String> {
     let output = Command::new("stty")
-        .stdin(
-            fs::OpenOptions::new()
-                .write(true)
-                .read(true)
-                .open("/dev/tty")
-                .expect("unable to open /dev/tty"),
-        )
+        .stdin(termion::get_tty().unwrap())
         .args(args)
         .output()
         .expect(
