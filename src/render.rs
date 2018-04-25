@@ -1,22 +1,24 @@
-use std::cmp::min;
 use termion::{clear, color, cursor, style};
 use regex::{Captures, Regex};
 
 use score::Score;
 use console;
 
+use std::rc::Rc;
+use std::cmp::min;
+
 pub struct Renderer<'a> {
-    scores: &'a Vec<Score<'a>>,
+    pub scores: Rc<Vec<Score<'a>>>,
     console: &'a console::Console,
-    query: &'a str,
+    pub query: String,
     pub selected: usize,
 }
 
 impl<'a> Renderer<'a> {
     pub fn new(
-        scores: &'a Vec<Score<'a>>,
+        scores: Rc<Vec<Score<'a>>>,
         console: &'a console::Console,
-        query: &'a str,
+        query: String,
         selected: usize,
     ) -> Renderer<'a> {
         Renderer {
@@ -30,8 +32,9 @@ impl<'a> Renderer<'a> {
     pub fn render_lines(&self) -> Vec<String> {
         let mut lines: Vec<String> = vec![];
         lines.push(format!(
-            "\r{}",
-            render_search_line(self.scores.len(), self.query)
+            "\r{}{}",
+            render_search_line(self.scores.len(), &self.query),
+            clear::AfterCursor
         ));
 
         let height = min(self.console.height, 20);
@@ -55,7 +58,7 @@ impl<'a> Renderer<'a> {
         self.console.write(format!("{}", cursor::Up(19)).as_str());
         self.console.write("\r");
         self.console
-            .write(render_search_line(self.scores.len(), self.query).as_str());
+            .write(render_search_line(self.scores.len(), &self.query).as_str());
     }
 
     pub fn clear(&self) {
@@ -87,7 +90,8 @@ fn highlight_score_line(
     format!(
         "{}{}{}{}{}{}{}{}",
         if selected {
-            format!("{}", style::Invert)
+            // format!("{}", style::Invert)
+            format!("{}", color::Bg(color::LightBlack))
         } else {
             "".to_string()
         },
