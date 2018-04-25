@@ -53,7 +53,7 @@ pub fn calculate_score<'a>(line: &'a str, query: &[char]) -> Option<Score<'a>> {
                         score.last = last_index;
                         score.points = points;
                     }
-                };
+                }
             }
 
             if found_score {
