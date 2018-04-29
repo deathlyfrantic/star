@@ -37,9 +37,7 @@ impl Console {
 
     pub fn write(&self, buf: &str) {
         let mut tty = termion::get_tty().unwrap();
-        let _ = write!(tty, "{}", cursor::Hide);
-        let _ = write!(tty, "{}", buf);
-        let _ = write!(tty, "{}", cursor::Show);
+        let _ = write!(tty, "{}{}{}", cursor::Hide, buf, cursor::Show);
         let _ = tty.flush();
     }
 
