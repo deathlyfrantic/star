@@ -13,6 +13,7 @@ pub struct Renderer<'a> {
     pub query: String,
     pub selected: usize,
     pub num_rendered: usize,
+    match_count_length: usize,
 }
 
 impl<'a> Renderer<'a> {
@@ -22,20 +23,31 @@ impl<'a> Renderer<'a> {
         query: String,
         selected: usize,
     ) -> Renderer<'a> {
+        let scores_len = scores.len();
         Renderer {
             scores: scores,
             console: console,
             query: query,
             selected: selected,
             num_rendered: 0,
+            match_count_length: format!("{}", scores_len).len(),
         }
+    }
+
+    fn render_search_line(&self, num_scores: usize) -> String {
+        format!(
+            "{:>width$} > {}",
+            num_scores,
+            self.query,
+            width = self.match_count_length
+        )
     }
 
     pub fn render_lines(&mut self) -> Vec<String> {
         let mut lines: Vec<String> = vec![];
         lines.push(format!(
             "\r{}{}",
-            render_search_line(self.scores.len(), &self.query),
+            self.render_search_line(self.scores.len()),
             clear::AfterCursor
         ));
 
@@ -65,7 +77,7 @@ impl<'a> Renderer<'a> {
         }
         self.console.write("\r");
         self.console
-            .write(render_search_line(self.scores.len(), &self.query).as_str());
+            .write(self.render_search_line(self.scores.len()).as_str());
     }
 
     pub fn clear(&mut self) {
@@ -75,10 +87,6 @@ impl<'a> Renderer<'a> {
                 .as_str(),
         );
     }
-}
-
-fn render_search_line(num_scores: usize, query: &str) -> String {
-    format!("{} > {}", num_scores, query)
 }
 
 fn highlight_score_line(
@@ -96,8 +104,7 @@ fn highlight_score_line(
     format!(
         "{}{}{}{}{}{}{}{}",
         if selected {
-            // format!("{}", style::Invert)
-            format!("{}", color::Bg(color::LightBlack))
+            format!("{}", style::Invert)
         } else {
             "".to_string()
         },
@@ -131,11 +138,6 @@ pub fn expand_tabs(line: &str) -> String {
 mod tests {
     use super::*;
     use score::calculate_score;
-
-    #[test]
-    fn test_render_search_line() {
-        assert_eq!(render_search_line(10, "foo"), "10 > foo");
-    }
 
     #[test]
     fn test_highlight_score_line() {
