@@ -17,6 +17,10 @@ use std::collections::HashMap;
 use std::rc::Rc;
 // use std::env;
 
+fn query_str(query: &[char]) -> String {
+    query.iter().collect::<String>()
+}
+
 fn get_scores<'a>(
     lines: Rc<Vec<score::Score<'a>>>,
     query: &[char],
@@ -34,15 +38,14 @@ fn run<'a>(stdin_lines: Box<Vec<String>>) -> Result<String, &'a str> {
     let mut query: Vec<char> = vec![];
     let tty = termion::get_tty().unwrap();
     let mut new_scores = false;
-    let mut score_map: HashMap<Vec<char>, Rc<Vec<score::Score>>> =
-        HashMap::new();
+    let mut score_map: HashMap<String, Rc<Vec<score::Score>>> = HashMap::new();
     let mut scores = Rc::new(
         stdin_lines
             .iter()
             .filter_map(|line| score::calculate_score(line, &query))
             .collect(),
     );
-    score_map.insert(vec![], Rc::clone(&scores));
+    score_map.insert("".to_string(), Rc::clone(&scores));
 
     let mut renderer =
         Renderer::new(Rc::clone(&scores), &console, "".to_string(), 0);
@@ -60,8 +63,11 @@ fn run<'a>(stdin_lines: Box<Vec<String>>) -> Result<String, &'a str> {
             }
             Key::Ctrl('n') | Key::Down => {
                 // move selection down
-                if renderer.selected < 18 {
+                if renderer.selected < renderer.num_rendered - 1 {
                     renderer.selected += 1;
+                    renderer.render();
+                } else if renderer.selected > 0 {
+                    renderer.selected = 0;
                     renderer.render();
                 }
             }
@@ -70,6 +76,9 @@ fn run<'a>(stdin_lines: Box<Vec<String>>) -> Result<String, &'a str> {
                 if renderer.selected > 0 {
                     renderer.selected -= 1;
                     renderer.render();
+                } else if renderer.num_rendered > 0 {
+                    renderer.selected = renderer.num_rendered - 1;
+                    renderer.render()
                 }
             }
             Key::Ctrl('w') => {
@@ -87,30 +96,42 @@ fn run<'a>(stdin_lines: Box<Vec<String>>) -> Result<String, &'a str> {
                         saw_nonspace = true;
                     }
                 }
-                renderer.scores = Rc::clone(&score_map.get(&query).unwrap());
+                renderer.scores =
+                    Rc::clone(&score_map.get(&query_str(&query)).unwrap());
             }
             Key::Ctrl('u') => {
                 // delete to beginning of line
                 query.clear();
-                renderer.scores = Rc::clone(&score_map.get(&query).unwrap());
+                renderer.scores =
+                    Rc::clone(&score_map.get(&query_str(&query)).unwrap());
                 new_scores = true;
             }
-            Key::Backspace => {
-                if query.len() > 0 {
-                    query.pop();
+            Key::Backspace => if query.len() > 0 {
+                query.pop();
+                if query.len() == 0 {
+                    scores = Rc::new(
+                        stdin_lines
+                            .iter()
+                            .filter_map(|line| {
+                                score::calculate_score(line, &query)
+                            })
+                            .collect(),
+                    );
+                    renderer.scores = Rc::clone(&scores);
+                } else {
                     renderer.scores =
-                        Rc::clone(&score_map.get(&query).unwrap());
-                    new_scores = true;
+                        Rc::clone(&score_map.get(&query_str(&query)).unwrap());
                 }
-            }
+                new_scores = true;
+            },
             Key::Char(c) => {
                 query.push(c);
-                if score_map.contains_key(&query) {
+                if score_map.contains_key(&query_str(&query)) {
                     renderer.scores =
-                        Rc::clone(&score_map.get(&query).unwrap());
+                        Rc::clone(&score_map.get(&query_str(&query)).unwrap());
                 } else {
                     scores = get_scores(scores, &query);
-                    score_map.insert(query.clone(), Rc::clone(&scores));
+                    score_map.insert(query_str(&query), Rc::clone(&scores));
                     renderer.scores = Rc::clone(&scores);
                 }
                 new_scores = true;
@@ -120,7 +141,7 @@ fn run<'a>(stdin_lines: Box<Vec<String>>) -> Result<String, &'a str> {
 
         if new_scores {
             new_scores = false;
-            renderer.query = query.iter().collect::<String>();
+            renderer.query = query_str(&query);
             renderer.render();
         }
     }

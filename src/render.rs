@@ -12,6 +12,7 @@ pub struct Renderer<'a> {
     console: &'a console::Console,
     pub query: String,
     pub selected: usize,
+    pub num_rendered: usize,
 }
 
 impl<'a> Renderer<'a> {
@@ -26,10 +27,11 @@ impl<'a> Renderer<'a> {
             console: console,
             query: query,
             selected: selected,
+            num_rendered: 0,
         }
     }
 
-    pub fn render_lines(&self) -> Vec<String> {
+    pub fn render_lines(&mut self) -> Vec<String> {
         let mut lines: Vec<String> = vec![];
         lines.push(format!(
             "\r{}{}",
@@ -39,6 +41,7 @@ impl<'a> Renderer<'a> {
 
         let height = min(self.console.height, 20);
         let num_matches = min((height - 1) as usize, self.scores.len());
+        self.num_rendered = num_matches;
 
         for (i, score) in self.scores.iter().enumerate().take(num_matches) {
             lines.push(highlight_score_line(
@@ -52,20 +55,23 @@ impl<'a> Renderer<'a> {
         lines
     }
 
-    pub fn render(&self) {
+    pub fn render(&mut self) {
         let lines = self.render_lines();
         self.console.write_lines(lines);
-        self.console.write(format!("{}", cursor::Up(19)).as_str());
+        if self.num_rendered > 0 {
+            self.console.write(
+                format!("{}", cursor::Up(self.num_rendered as u16)).as_str(),
+            );
+        }
         self.console.write("\r");
         self.console
             .write(render_search_line(self.scores.len(), &self.query).as_str());
     }
 
-    pub fn clear(&self) {
-        let height = min(self.console.height, 19);
+    pub fn clear(&mut self) {
         self.console.write(
             format!("{}\r\n", clear::CurrentLine)
-                .repeat(height as usize)
+                .repeat(self.num_rendered)
                 .as_str(),
         );
     }
