@@ -1,3 +1,5 @@
+use line::Line;
+
 #[derive(Debug, PartialEq)]
 enum MatchKind {
     Sequential,
@@ -10,11 +12,11 @@ pub struct Score<'a> {
     pub first: usize,
     pub last: usize,
     pub points: usize,
-    pub line: &'a str,
+    pub line: &'a Line,
 }
 
 impl<'a> Score<'a> {
-    fn new(line: &'a str) -> Score {
+    fn new(line: &'a Line) -> Score {
         Score {
             first: 0,
             last: 0,
@@ -24,11 +26,12 @@ impl<'a> Score<'a> {
     }
 }
 
-pub fn calculate_score<'a>(line: &'a str, query: &[char]) -> Option<Score<'a>> {
+pub fn calculate_score<'a>(line: &'a Line, query: &[char]) -> Option<Score<'a>> {
     let mut score = Score::new(line);
     match query.len() {
         0 => Some(score),
-        1 => match line.to_lowercase()
+        1 => match line
+            .low_buf
             .find(query[0].to_lowercase().to_string().as_str())
         {
             Some(index) => {
@@ -41,11 +44,12 @@ pub fn calculate_score<'a>(line: &'a str, query: &[char]) -> Option<Score<'a>> {
         },
         _ => {
             let mut found_score = false;
-            for (start, _) in line.to_lowercase()
+            for (start, _) in line
+                .low_buf
                 .match_indices(query[0].to_lowercase().to_string().as_str())
             {
                 if let Some((points, last_index)) =
-                    find_end_of_match(line, &query[1..], start)
+                    find_end_of_match(line.low_buf.as_str(), &query[1..], start)
                 {
                     found_score = true;
                     if last_index != 0 && points < score.points {
@@ -65,11 +69,7 @@ pub fn calculate_score<'a>(line: &'a str, query: &[char]) -> Option<Score<'a>> {
     }
 }
 
-fn find_end_of_match(
-    line: &str,
-    chars: &[char],
-    start: usize,
-) -> Option<(usize, usize)> {
+fn find_end_of_match(line: &str, chars: &[char], start: usize) -> Option<(usize, usize)> {
     let mut last_index = start;
     let mut score = 1;
     let mut last_match_kind = MatchKind::Normal;
@@ -113,94 +113,129 @@ mod tests {
     #[test]
     fn test_calculate_score() {
         // test score is None if query isn't in string
-        assert_eq!(calculate_score("foo", &['q', 'x', 'z']), None);
+        assert_eq!(
+            calculate_score(&Line::new(String::from("foo")), &['q', 'x', 'z']),
+            None
+        );
 
         // test score is usize::max_value() if query is empty
+        let line = Line::new(String::from("foo"));
         let expected = Some(Score {
             first: 0,
             last: 0,
             points: usize::max_value(),
-            line: "foo",
+            line: &line,
         });
-        assert_eq!(calculate_score("foo", &[]), expected);
+        assert_eq!(
+            calculate_score(&Line::new(String::from("foo")), &[]),
+            expected
+        );
 
         // test single character query
+        let line = Line::new(String::from("oof"));
         let expected = Some(Score {
             first: 2,
             last: 2,
             points: 1,
-            line: "oof",
+            line: &line,
         });
-        assert_eq!(calculate_score("oof", &['f']), expected);
-        assert_eq!(calculate_score("oof", &['b']), None);
+        assert_eq!(
+            calculate_score(&Line::new(String::from("oof")), &['f']),
+            expected
+        );
+        assert_eq!(
+            calculate_score(&Line::new(String::from("oof")), &['b']),
+            None
+        );
 
         // some tests to match scores from selecta.rb
+        let line = Line::new(String::from("foofbbar"));
         let expected = Some(Score {
             first: 0,
             last: 4,
             points: 5,
-            line: "foofbbar",
+            line: &line,
         });
-        assert_eq!(calculate_score("foofbbar", &['f', 'o', 'b']), expected);
+        assert_eq!(
+            calculate_score(&Line::new(String::from("foofbbar")), &['f', 'o', 'b']),
+            expected
+        );
 
+        let line = Line::new(String::from("foo / ba r"));
         let expected = Some(Score {
             first: 1,
             last: 9,
             points: 2,
-            line: "foo / ba r",
+            line: &line,
         });
-        assert_eq!(calculate_score("foo / ba r", &['o', 'r']), expected);
+        assert_eq!(
+            calculate_score(&Line::new(String::from("foo / ba r")), &['o', 'r']),
+            expected
+        );
 
+        let line = Line::new(String::from("f||||||||b||||||||||||||a||||f||||||||r"));
         let expected = Some(Score {
             first: 9,
             last: 38,
             points: 2,
-            line: "f||||||||b||||||||||||||a||||f||||||||r",
+            line: &line,
         });
         assert_eq!(
             calculate_score(
-                "f||||||||b||||||||||||||a||||f||||||||r",
+                &Line::new(String::from("f||||||||b||||||||||||||a||||f||||||||r")),
                 &['b', 'a', 'r']
             ),
             expected
         );
 
+        let line = Line::new(String::from("foo / ba /**  r"));
         let expected = Some(Score {
             first: 6,
             last: 14,
             points: 3,
-            line: "foo / ba /**  r",
+            line: &line,
         });
         assert_eq!(
-            calculate_score("foo / ba /**  r", &['b', 'a', 'r']),
+            calculate_score(
+                &Line::new(String::from("foo / ba /**  r")),
+                &['b', 'a', 'r']
+            ),
             expected
         );
 
         // make sure best score is calculated when duplicates exist.
         // this case is identical to the prior, except with "bar" at the
         // beginning, so score should be much better (lower)
+        let line = Line::new(String::from("barfoo / ba /**  r"));
         let expected = Some(Score {
             first: 0,
             last: 2,
             points: 2,
-            line: "barfoo / ba /**  r",
+            line: &line,
         });
         assert_eq!(
-            calculate_score("barfoo / ba /**  r", &['b', 'a', 'r']),
+            calculate_score(
+                &Line::new(String::from("barfoo / ba /**  r")),
+                &['b', 'a', 'r']
+            ),
             expected
         );
 
         // make sure best score is calculated when duplicates exist.
         // this case is identical to the prior, except with "bar" at the
         // end, so score should be the same (though with different span)
+        let line = Line::new(String::from("foo / ba /**  rbar"));
         let expected = Some(Score {
             first: 15,
             last: 17,
             points: 2,
-            line: "foo / ba /**  rbar",
+            line: &line,
         });
         assert_eq!(
-            calculate_score("foo / ba /**  rbar", &['b', 'a', 'r']),
+            calculate_score(
+                &Line::new(String::from("foo / ba /**  rbar")),
+                &['b', 'a', 'r']
+            ),
             expected
         );
     }

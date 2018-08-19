@@ -1,11 +1,11 @@
-use termion::{clear, color, cursor, style};
 use regex::{Captures, Regex};
+use termion::{clear, color, cursor, style};
 
-use score::Score;
 use console;
+use score::Score;
 
-use std::rc::Rc;
 use std::cmp::min;
+use std::rc::Rc;
 
 pub struct Renderer<'a> {
     pub scores: Rc<Vec<Score<'a>>>,
@@ -71,9 +71,8 @@ impl<'a> Renderer<'a> {
         let lines = self.render_lines();
         self.console.write_lines(lines);
         if self.num_rendered > 0 {
-            self.console.write(
-                format!("{}", cursor::Up(self.num_rendered as u16)).as_str(),
-            );
+            self.console
+                .write(format!("{}", cursor::Up(self.num_rendered as u16)).as_str());
         }
         self.console.write("\r");
         self.console
@@ -89,17 +88,11 @@ impl<'a> Renderer<'a> {
     }
 }
 
-fn highlight_score_line(
-    score: &Score,
-    width: usize,
-    selected: bool,
-    has_query: bool,
-) -> String {
-    let truncated = score.line.split_at(min(width, score.line.len())).0;
+fn highlight_score_line(score: &Score, width: usize, selected: bool, has_query: bool) -> String {
+    let truncated = score.line.buf.split_at(min(width, score.line.len())).0;
     // need to split _after_ score.last so we include the last
     // character in the highlighted portion
-    let (left, right) =
-        truncated.split_at(min(truncated.len(), score.last + 1));
+    let (left, right) = truncated.split_at(min(truncated.len(), score.last + 1));
     let (left, middle) = left.split_at(min(left.len(), score.first));
     format!(
         "{}{}{}{}{}{}{}{}",
@@ -137,14 +130,14 @@ pub fn expand_tabs(line: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use line::Line;
     use score::calculate_score;
 
     #[test]
     fn test_highlight_score_line() {
-        let score = calculate_score(
-            "xxxfoobarxxx",
-            "foobar".chars().collect::<Vec<char>>().as_slice(),
-        ).unwrap();
+        let line = Line::new(String::from("xxxfoobarxxx"));
+        let score =
+            calculate_score(&line, "foobar".chars().collect::<Vec<char>>().as_slice()).unwrap();
         let expected = format!(
             "xxx{}foobar{}xxx{}{}",
             color::Fg(color::Red),
