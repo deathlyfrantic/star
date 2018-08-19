@@ -5,15 +5,16 @@ extern crate termion;
 use termion::event::Key;
 use termion::input::TermRead;
 
-mod score;
 mod console;
+mod line;
 mod render;
+mod score;
 
 use render::Renderer;
 
+use std::collections::HashMap;
 use std::io::{self, BufRead};
 use std::process::exit;
-use std::collections::HashMap;
 use std::rc::Rc;
 // use std::env;
 
@@ -21,10 +22,7 @@ fn query_str(query: &[char]) -> String {
     query.iter().collect::<String>()
 }
 
-fn get_scores<'a>(
-    lines: Rc<Vec<score::Score<'a>>>,
-    query: &[char],
-) -> Rc<Vec<score::Score<'a>>> {
+fn get_scores<'a>(lines: Rc<Vec<score::Score<'a>>>, query: &[char]) -> Rc<Vec<score::Score<'a>>> {
     Rc::new(
         lines
             .iter()
@@ -33,7 +31,7 @@ fn get_scores<'a>(
     )
 }
 
-fn run<'a>(stdin_lines: Box<Vec<String>>) -> Result<String, &'a str> {
+fn run<'a>(stdin_lines: Box<Vec<line::Line>>) -> Result<String, &'a str> {
     let console = console::Console::new()?;
     let mut query: Vec<char> = vec![];
     let tty = termion::get_tty().unwrap();
@@ -42,13 +40,12 @@ fn run<'a>(stdin_lines: Box<Vec<String>>) -> Result<String, &'a str> {
     let mut scores = Rc::new(
         stdin_lines
             .iter()
-            .filter_map(|line| score::calculate_score(line, &query))
+            .filter_map(|l| score::calculate_score(l, &query))
             .collect(),
     );
     score_map.insert("".to_string(), Rc::clone(&scores));
 
-    let mut renderer =
-        Renderer::new(Rc::clone(&scores), &console, "".to_string(), 0);
+    let mut renderer = Renderer::new(Rc::clone(&scores), &console, "".to_string(), 0);
     renderer.render();
 
     for c in tty.keys() {
@@ -59,7 +56,7 @@ fn run<'a>(stdin_lines: Box<Vec<String>>) -> Result<String, &'a str> {
             }
             Key::Char('\n') => {
                 renderer.clear();
-                return Ok(String::from(scores[renderer.selected].line));
+                return Ok(scores[renderer.selected].line.buf.clone());
             }
             Key::Ctrl('n') | Key::Down => {
                 // move selection down
@@ -96,8 +93,7 @@ fn run<'a>(stdin_lines: Box<Vec<String>>) -> Result<String, &'a str> {
                         saw_nonspace = true;
                     }
                 }
-                renderer.scores =
-                    Rc::clone(&score_map.get(&query_str(&query)).unwrap());
+                renderer.scores = Rc::clone(&score_map.get(&query_str(&query)).unwrap());
             }
             Key::Ctrl('u') => {
                 // delete to beginning of line
@@ -112,23 +108,19 @@ fn run<'a>(stdin_lines: Box<Vec<String>>) -> Result<String, &'a str> {
                     scores = Rc::new(
                         stdin_lines
                             .iter()
-                            .filter_map(|line| {
-                                score::calculate_score(line, &query)
-                            })
+                            .filter_map(|l| score::calculate_score(l, &query))
                             .collect(),
                     );
                     renderer.scores = Rc::clone(&scores);
                 } else {
-                    renderer.scores =
-                        Rc::clone(&score_map.get(&query_str(&query)).unwrap());
+                    renderer.scores = Rc::clone(&score_map.get(&query_str(&query)).unwrap());
                 }
                 new_scores = true;
             },
             Key::Char(c) => {
                 query.push(c);
                 if score_map.contains_key(&query_str(&query)) {
-                    renderer.scores =
-                        Rc::clone(&score_map.get(&query_str(&query)).unwrap());
+                    renderer.scores = Rc::clone(&score_map.get(&query_str(&query)).unwrap());
                 } else {
                     scores = get_scores(scores, &query);
                     score_map.insert(query_str(&query), Rc::clone(&scores));
@@ -152,22 +144,13 @@ fn run<'a>(stdin_lines: Box<Vec<String>>) -> Result<String, &'a str> {
 
 fn main() {
     let stdin = io::stdin();
-    let stdin_lines: Vec<String> =
-        stdin.lock().lines().filter_map(|line| line.ok()).collect();
+    let stdin_lines: Vec<line::Line> = stdin
+        .lock()
+        .lines()
+        .filter_map(|l| (l.ok()))
+        .map(|l| line::Line::new(l))
+        .collect();
     let stdin_lines = Box::new(stdin_lines);
-
-    // let args: Vec<String> = env::args().collect();
-    // let search = if args.len() > 1 {
-    //     args[1].clone()
-    // } else {
-    //     "foobar".to_string()
-    // };
-    // let query = search.chars().collect::<Vec<char>>();
-    // let scores: Vec<score::Score> = stdin_lines
-    //     .iter()
-    //     .filter_map(|line| score::calculate_score(line, &query))
-    //     .collect();
-    // println!("scores length: {}", scores.len());
 
     match run(stdin_lines) {
         Ok(l) => println!("{}", l),
