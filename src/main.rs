@@ -102,8 +102,8 @@ fn run<'a>(stdin_lines: Box<Vec<String>>) -> Result<String, &'a str> {
             Key::Ctrl('u') => {
                 // delete to beginning of line
                 query.clear();
-                renderer.scores =
-                    Rc::clone(&score_map.get(&query_str(&query)).unwrap());
+                scores = Rc::clone(&score_map.get("").unwrap());
+                renderer.scores = Rc::clone(&scores);
                 new_scores = true;
             }
             Key::Backspace => if query.len() > 0 {
