@@ -57,10 +57,7 @@ fn stty(args: &[&str]) -> Option<String> {
         .stdin(termion::get_tty().unwrap())
         .args(args)
         .output()
-        .expect(
-            format!("failed to execute process (stty {}) ", args.join(" "))
-                .as_str(),
-        );
+        .expect(format!("failed to execute process (stty {}) ", args.join(" ")).as_str());
 
     if output.status.success() {
         Some(String::from_utf8_lossy(&output.stdout).to_string())
