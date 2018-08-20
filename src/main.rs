@@ -10,6 +10,7 @@ mod line;
 mod render;
 mod score;
 
+use line::Line;
 use render::Renderer;
 
 use std::collections::HashMap;
@@ -31,7 +32,7 @@ fn get_scores<'a>(lines: Rc<Vec<score::Score<'a>>>, query: &[char]) -> Rc<Vec<sc
     )
 }
 
-fn run<'a>(stdin_lines: Box<Vec<line::Line>>) -> Result<String, &'a str> {
+fn run<'a>(stdin_lines: Box<Vec<Line>>) -> Result<String, &'a str> {
     let console = console::Console::new()?;
     let mut query: Vec<char> = vec![];
     let tty = termion::get_tty().unwrap();
@@ -144,11 +145,11 @@ fn run<'a>(stdin_lines: Box<Vec<line::Line>>) -> Result<String, &'a str> {
 
 fn main() {
     let stdin = io::stdin();
-    let stdin_lines: Vec<line::Line> = stdin
+    let stdin_lines: Vec<Line> = stdin
         .lock()
         .lines()
         .filter_map(|l| (l.ok()))
-        .map(|l| line::Line::new(l))
+        .map(|l| Line::new(l))
         .collect();
     let stdin_lines = Box::new(stdin_lines);
 
