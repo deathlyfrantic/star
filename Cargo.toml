@@ -7,3 +7,4 @@ authors = ["Zandr Martin <git@zandr.me>"]
 termion = "1.5.1"
 regex = "0.2.10"
 libc = "0.2.40"
+termios = "0.3.0"

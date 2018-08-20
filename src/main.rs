@@ -1,6 +1,7 @@
 extern crate libc;
 extern crate regex;
 extern crate termion;
+extern crate termios;
 
 use termion::event::Key;
 use termion::input::TermRead;
