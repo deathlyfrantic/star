@@ -76,11 +76,7 @@ fn find_end_of_match(line: &str, chars: &[char], start: usize) -> Option<(usize,
     let line_chars: Vec<_> = line.char_indices().collect();
 
     for c in chars {
-        let index = match line_chars
-            .iter()
-            // TODO(Zandr Martin/2018-04-09): check results of this > vs >=
-            .find(|t| t.0 > last_index && c.eq_ignore_ascii_case(&t.1))
-        {
+        let index = match line_chars.iter().find(|t| t.0 > last_index && c == &t.1) {
             Some(t) => t.0,
             None => return None,
         };
