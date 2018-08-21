@@ -93,19 +93,8 @@ fn run<'a>(stdin_lines: Box<Vec<Line>>) -> Result<String, io::Error> {
                 renderer.scores = Rc::clone(&scores);
                 new_scores = true;
             }
-            Key::Backspace => if query.len() > 0 {
-                query.pop();
-                if query.len() == 0 {
-                    scores = Rc::new(
-                        stdin_lines
-                            .iter()
-                            .filter_map(|l| score::calculate_score(l, &query))
-                            .collect(),
-                    );
-                    renderer.scores = Rc::clone(&scores);
-                } else {
-                    renderer.scores = Rc::clone(&score_map.get(&query_str(&query)).unwrap());
-                }
+            Key::Backspace => if let Some(_) = query.pop() {
+                renderer.scores = Rc::clone(&score_map.get(&query_str(&query)).unwrap());
                 new_scores = true;
             },
             Key::Char(c) => {
