@@ -33,7 +33,7 @@ fn get_scores<'a>(lines: Rc<Vec<score::Score<'a>>>, query: &[char]) -> Rc<Vec<sc
     )
 }
 
-fn run<'a>(stdin_lines: Box<Vec<Line>>) -> Result<String, &'a str> {
+fn run<'a>(stdin_lines: Box<Vec<Line>>) -> Result<String, io::Error> {
     let console = console::Console::new()?;
     let mut query: Vec<char> = vec![];
     let tty = termion::get_tty().unwrap();
@@ -54,7 +54,7 @@ fn run<'a>(stdin_lines: Box<Vec<Line>>) -> Result<String, &'a str> {
         match c.unwrap() {
             Key::Ctrl('c') | Key::Esc => {
                 renderer.clear();
-                return Err("ctrl-c");
+                return Err(io::Error::new(io::ErrorKind::Other, "ctrl-c"));
             }
             Key::Char('\n') => {
                 renderer.clear();
