@@ -1,9 +1,11 @@
+use libc::{c_ushort, ioctl, TIOCGWINSZ};
 use termion::{self, cursor};
 use termios::{cfmakeraw, tcsetattr, Termios, ECHO, ICANON, TCSANOW};
 
 use std::fs::File;
 use std::io::{self, Write};
-use std::os::unix::io::AsRawFd;
+use std::mem;
+use std::os::unix::io::{AsRawFd, RawFd};
 
 #[derive(Debug)]
 pub struct Console {
@@ -15,12 +17,8 @@ pub struct Console {
 
 impl Console {
     pub fn new<'a>() -> Result<Console, io::Error> {
-        if !termion::is_tty(&termion::get_tty()?) {
-            return Err(io::Error::new(io::ErrorKind::Other, "not a TTY"));
-        }
-
-        let (width, height) = termion::terminal_size()?;
         let tty = termion::get_tty()?;
+        let (width, height) = terminal_size(tty.as_raw_fd())?;
         let mut termios = Termios::from_fd(tty.as_raw_fd())?;
         let original_state = termios.clone();
 
@@ -50,5 +48,24 @@ impl Console {
 impl Drop for Console {
     fn drop(&mut self) {
         tcsetattr(self.tty.as_raw_fd(), TCSANOW, &mut self.original_state).unwrap();
+    }
+}
+
+#[repr(C)]
+struct TermSize {
+    row: c_ushort,
+    col: c_ushort,
+    _x: c_ushort,
+    _y: c_ushort,
+}
+
+fn terminal_size(fd: RawFd) -> io::Result<(u16, u16)> {
+    unsafe {
+        let mut size: TermSize = mem::zeroed();
+        if ioctl(fd, TIOCGWINSZ, &mut size as *mut _) == -1 {
+            Err(io::Error::last_os_error())
+        } else {
+            Ok((size.col as u16, size.row as u16))
+        }
     }
 }
