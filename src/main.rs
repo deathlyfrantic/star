@@ -24,15 +24,6 @@ fn query_str(query: &[char]) -> String {
     query.iter().collect::<String>()
 }
 
-fn get_scores<'a>(lines: Rc<Vec<score::Score<'a>>>, query: &[char]) -> Rc<Vec<score::Score<'a>>> {
-    Rc::new(
-        lines
-            .iter()
-            .filter_map(|s| score::calculate_score(s.line, query))
-            .collect(),
-    )
-}
-
 fn run<'a>(stdin_lines: Box<Vec<Line>>) -> Result<String, io::Error> {
     let console = console::Console::new()?;
     let mut query: Vec<char> = vec![];
@@ -124,7 +115,12 @@ fn run<'a>(stdin_lines: Box<Vec<Line>>) -> Result<String, io::Error> {
                 if score_map.contains_key(&query_str(&query)) {
                     renderer.scores = Rc::clone(&score_map.get(&query_str(&query)).unwrap());
                 } else {
-                    scores = get_scores(scores, &query);
+                    scores = Rc::new(
+                        scores
+                            .iter()
+                            .filter_map(|s| score::calculate_score(s.line, &query))
+                            .collect(),
+                    );
                     score_map.insert(query_str(&query), Rc::clone(&scores));
                     renderer.scores = Rc::clone(&scores);
                 }
