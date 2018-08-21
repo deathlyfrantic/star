@@ -18,7 +18,6 @@ use std::collections::HashMap;
 use std::io::{self, BufRead};
 use std::process::exit;
 use std::rc::Rc;
-// use std::env;
 
 fn query_str(query: &[char]) -> String {
     query.iter().collect::<String>()
