@@ -74,8 +74,7 @@ fn run<'a>(stdin_lines: Box<Vec<Line>>) -> Result<String, io::Error> {
                 // delete word
                 new_scores = true;
                 let mut saw_nonspace = false;
-                while query.len() > 0 {
-                    let c = query.pop().unwrap();
+                while let Some(c) = query.pop() {
                     if c.is_whitespace() {
                         if saw_nonspace {
                             query.push(c);
