@@ -132,6 +132,11 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_query_str() {
+        assert_eq!(query_str(&['f', 'o', 'o']), String::from("foo"));
+    }
+
+    #[test]
     fn test_get_scores() {
         let lines = vec![
             Line::new(String::from("foo")),
