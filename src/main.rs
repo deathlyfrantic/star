@@ -23,7 +23,7 @@ fn query_str(query: &[char]) -> String {
     query.iter().collect::<String>()
 }
 
-fn run<'a>(stdin_lines: Box<Vec<Line>>) -> Result<String, io::Error> {
+fn run(stdin_lines: Box<Vec<Line>>) -> Result<String, io::Error> {
     let console = console::Console::new()?;
     let mut query: Vec<char> = vec![];
     let tty = termion::get_tty()?;
