@@ -16,7 +16,7 @@ pub struct Console {
 }
 
 impl Console {
-    pub fn new<'a>() -> Result<Console, io::Error> {
+    pub fn new() -> Result<Console, io::Error> {
         let tty = termion::get_tty()?;
         let (width, height) = terminal_size(tty.as_raw_fd())?;
         let mut termios = Termios::from_fd(tty.as_raw_fd())?;
