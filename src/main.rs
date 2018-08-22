@@ -50,7 +50,7 @@ fn get_scores<'a>(
 
 fn run(stdin_lines: Box<Vec<Line>>) -> Result<String, io::Error> {
     let console = console::Console::new()?;
-    let tty = termion::get_tty()?;
+    let ref tty = console.tty;
     let mut query: Vec<char> = vec![];
     let mut need_new_scores = false;
     let mut score_map: HashMap<String, Rc<Vec<Score>>> = HashMap::new();
