@@ -1,7 +1,7 @@
 use termion::event::Key;
 use termion::input::TermRead;
 
-use console;
+use console::Console;
 use line::Line;
 use render::Renderer;
 use score::{calculate_score, Score};
@@ -39,7 +39,7 @@ fn get_scores<'a>(
 }
 
 pub fn run(stdin_lines: Box<Vec<Line>>) -> Result<String, io::Error> {
-    let console = console::Console::new()?;
+    let console = Console::new()?;
     let ref tty = console.tty;
     let mut query: Vec<char> = vec![];
     let mut need_new_scores = false;
