@@ -12,7 +12,7 @@ pub struct Console {
     pub width: u16,
     pub height: u16,
     original_state: Termios,
-    tty: File,
+    pub tty: File,
 }
 
 impl Console {
