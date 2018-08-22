@@ -13,6 +13,7 @@ mod score;
 
 use line::Line;
 use render::Renderer;
+use score::{calculate_score, Score};
 
 use std::collections::HashMap;
 use std::io::{self, BufRead};
@@ -24,9 +25,9 @@ fn query_str(query: &[char]) -> String {
 }
 
 fn get_scores<'a>(
-    map: &mut HashMap<String, Rc<Vec<score::Score<'a>>>>,
+    map: &mut HashMap<String, Rc<Vec<Score<'a>>>>,
     query: &[char],
-) -> Rc<Vec<score::Score<'a>>> {
+) -> Rc<Vec<Score<'a>>> {
     if map.contains_key(&query_str(&query)) {
         return Rc::clone(&map.get(&query_str(&query)).unwrap());
     }
@@ -38,7 +39,7 @@ fn get_scores<'a>(
                 map.get(&query_str(&tmp))
                     .unwrap()
                     .iter()
-                    .filter_map(|s| score::calculate_score(s.line, &query))
+                    .filter_map(|s| calculate_score(s.line, &query))
                     .collect(),
             );
             map.insert(query_str(&query), Rc::clone(&new_scores));
@@ -52,11 +53,11 @@ fn run(stdin_lines: Box<Vec<Line>>) -> Result<String, io::Error> {
     let mut query: Vec<char> = vec![];
     let tty = termion::get_tty()?;
     let mut need_new_scores = false;
-    let mut score_map: HashMap<String, Rc<Vec<score::Score>>> = HashMap::new();
+    let mut score_map: HashMap<String, Rc<Vec<Score>>> = HashMap::new();
     let mut scores = Rc::new(
         stdin_lines
             .iter()
-            .filter_map(|l| score::calculate_score(l, &query))
+            .filter_map(|l| calculate_score(l, &query))
             .collect(),
     );
     score_map.insert("".to_string(), Rc::clone(&scores));
@@ -171,11 +172,11 @@ mod tests {
             Line::new(String::from("baz")),
         ];
         let mut query: Vec<char> = vec![];
-        let mut map: HashMap<String, Rc<Vec<score::Score>>> = HashMap::new();
+        let mut map: HashMap<String, Rc<Vec<Score>>> = HashMap::new();
         let scores = Rc::new(
             lines
                 .iter()
-                .filter_map(|l| score::calculate_score(l, &query))
+                .filter_map(|l| calculate_score(l, &query))
                 .collect(),
         );
         map.insert("".to_string(), Rc::clone(&scores));
@@ -185,10 +186,10 @@ mod tests {
         assert_eq!(result.len(), 2);
         assert_ne!(result, scores);
         // create new scores to associate with the "b" query
-        let scores: Rc<Vec<score::Score>> = Rc::new(
+        let scores: Rc<Vec<Score>> = Rc::new(
             lines
                 .iter()
-                .filter_map(|l| score::calculate_score(l, &query))
+                .filter_map(|l| calculate_score(l, &query))
                 .collect(),
         );
         // there should only be two scores
