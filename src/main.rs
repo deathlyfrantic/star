@@ -134,8 +134,6 @@ fn run(stdin_lines: Box<Vec<Line>>) -> Result<String, io::Error> {
         }
     }
 
-    get_scores(&mut score_map, &query);
-
     // should never get here but the compiler doesn't know that
     Ok("".to_string())
 }
