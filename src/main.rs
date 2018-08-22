@@ -54,7 +54,7 @@ fn run(stdin_lines: Box<Vec<Line>>) -> Result<String, io::Error> {
     let mut query: Vec<char> = vec![];
     let mut need_new_scores = false;
     let mut score_map: HashMap<String, Rc<Vec<Score>>> = HashMap::new();
-    let mut scores = Rc::new(
+    let scores = Rc::new(
         stdin_lines
             .iter()
             .filter_map(|l| calculate_score(l, &query))
@@ -127,9 +127,8 @@ fn run(stdin_lines: Box<Vec<Line>>) -> Result<String, io::Error> {
 
         if need_new_scores {
             need_new_scores = false;
-            scores = get_scores(&mut score_map, &query);
             renderer.query = query_str(&query);
-            renderer.scores = Rc::clone(&scores);
+            renderer.scores = get_scores(&mut score_map, &query);
             renderer.render();
         }
     }
