@@ -26,7 +26,7 @@ fn query_str(query: &[char]) -> String {
 fn run<'a>(stdin_lines: Box<Vec<Line>>) -> Result<String, io::Error> {
     let console = console::Console::new()?;
     let mut query: Vec<char> = vec![];
-    let tty = termion::get_tty().unwrap();
+    let tty = termion::get_tty()?;
     let mut new_scores = false;
     let mut score_map: HashMap<String, Rc<Vec<score::Score>>> = HashMap::new();
     let mut scores = Rc::new(
