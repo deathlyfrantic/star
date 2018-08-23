@@ -14,6 +14,7 @@ pub struct Renderer<'a> {
     pub selected: usize,
     pub num_rendered: usize,
     match_count_length: usize,
+    height: usize,
 }
 
 impl<'a> Renderer<'a> {
@@ -22,15 +23,17 @@ impl<'a> Renderer<'a> {
         console: &'a console::Console,
         query: String,
         selected: usize,
+        match_count_length: usize,
+        height: usize,
     ) -> Renderer<'a> {
-        let scores_len = scores.len();
         Renderer {
             scores: scores,
             console: console,
             query: query,
             selected: selected,
             num_rendered: 0,
-            match_count_length: format!("{}", scores_len).len(),
+            match_count_length: match_count_length,
+            height: height,
         }
     }
 
@@ -51,8 +54,7 @@ impl<'a> Renderer<'a> {
             clear::AfterCursor
         ));
 
-        let height = min(self.console.height, 20);
-        let num_matches = min((height - 1) as usize, self.scores.len());
+        let num_matches = min((self.height - 1) as usize, self.scores.len());
         self.num_rendered = num_matches;
 
         for (i, score) in self.scores.iter().enumerate().take(num_matches) {

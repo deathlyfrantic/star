@@ -6,6 +6,7 @@ use line::Line;
 use render::Renderer;
 use score::{calculate_score, Score};
 
+use std::cmp::min;
 use std::collections::HashMap;
 use std::io;
 use std::rc::Rc;
@@ -38,21 +39,46 @@ fn get_scores<'a>(
     }
 }
 
-pub fn run(stdin_lines: Box<Vec<Line>>) -> Result<String, io::Error> {
+pub fn run(
+    stdin_lines: Box<Vec<Line>>,
+    initial_search: &str,
+    height: usize,
+) -> Result<String, io::Error> {
     let console = Console::new()?;
     let ref tty = console.tty;
-    let mut query: Vec<char> = vec![];
+    let mut query: Vec<char> = initial_search.chars().collect();
     let mut need_new_scores = false;
     let mut score_map: HashMap<String, Rc<Vec<Score>>> = HashMap::new();
-    let scores = Rc::new(
+
+    if query.len() > 0 {
+        // "prime" the cache with the scores for "", since an initial query was specified
+        score_map.insert(
+            "".to_string(),
+            Rc::new(
+                stdin_lines
+                    .iter()
+                    .filter_map(|l| calculate_score(l, &[]))
+                    .collect(),
+            ),
+        );
+    }
+
+    let mut scores = Rc::new(
         stdin_lines
             .iter()
             .filter_map(|l| calculate_score(l, &query))
             .collect(),
     );
-    score_map.insert("".to_string(), Rc::clone(&scores));
+    score_map.insert(query_str(&query), Rc::clone(&scores));
 
-    let mut renderer = Renderer::new(Rc::clone(&scores), &console, "".to_string(), 0);
+    let mut renderer = Renderer::new(
+        Rc::clone(&scores),
+        &console,
+        query_str(&query),
+        0,
+        format!("{}", stdin_lines.len()).len(),
+        height,
+    );
     renderer.render();
 
     for c in tty.keys() {
@@ -63,6 +89,9 @@ pub fn run(stdin_lines: Box<Vec<Line>>) -> Result<String, io::Error> {
             }
             Key::Char('\n') => {
                 renderer.clear();
+                if scores.len() == 0 {
+                    return Ok(String::new());
+                }
                 return Ok(scores[renderer.selected].line.buf.clone());
             }
             Key::Ctrl('n') | Key::Down => {
@@ -118,7 +147,9 @@ pub fn run(stdin_lines: Box<Vec<Line>>) -> Result<String, io::Error> {
         if need_new_scores {
             need_new_scores = false;
             renderer.query = query_str(&query);
-            renderer.scores = get_scores(&mut score_map, &query);
+            scores = get_scores(&mut score_map, &query);
+            renderer.scores = Rc::clone(&scores);
+            renderer.selected = min(renderer.selected, scores.len() - 1);
             renderer.render();
         }
     }
