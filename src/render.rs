@@ -33,7 +33,7 @@ impl<'a> Renderer<'a> {
             selected: selected,
             num_rendered: 0,
             match_count_length: match_count_length,
-            height: height,
+            height: min(height, console.height as usize),
         }
     }
 
