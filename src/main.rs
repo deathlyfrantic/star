@@ -1,6 +1,5 @@
 extern crate clap;
 extern crate libc;
-extern crate regex;
 extern crate termion;
 extern crate termios;
 
