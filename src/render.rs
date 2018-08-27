@@ -108,7 +108,7 @@ fn highlight_score_line(score: &Score, width: usize, selected: bool, has_query: 
         color::Fg(color::Reset),
         expand_tabs(right),
         style::Reset,
-        clear::AfterCursor
+        clear::UntilNewline
     )
 }
 
@@ -140,7 +140,7 @@ mod tests {
             color::Fg(color::Red),
             color::Fg(color::Reset),
             style::Reset,
-            clear::AfterCursor
+            clear::UntilNewline
         );
         assert_eq!(highlight_score_line(&score, 80, false, true), expected);
 
@@ -150,7 +150,7 @@ mod tests {
             color::Fg(color::Red),
             color::Fg(color::Reset),
             style::Reset,
-            clear::AfterCursor
+            clear::UntilNewline
         );
         assert_eq!(highlight_score_line(&score, 80, true, true), expected);
 
@@ -158,7 +158,7 @@ mod tests {
             "xxxfoobar{}xxx{}{}",
             color::Fg(color::Reset),
             style::Reset,
-            clear::AfterCursor
+            clear::UntilNewline
         );
         assert_eq!(highlight_score_line(&score, 80, false, false), expected);
     }
