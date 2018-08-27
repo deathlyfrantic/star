@@ -240,16 +240,22 @@ mod tests {
     #[test]
     fn test_find_end_of_match() {
         // test score is None if query isn't in string
-        assert_eq!(find_end_of_match("foo", &['q', 'x', 'z'], 0), None);
+        assert_eq!(
+            find_end_of_match(&Line::new(String::from("foo")), &['q', 'x', 'z'], 0),
+            None
+        );
 
         // test score is None if query isn't in string _after_ specified start
-        assert_eq!(find_end_of_match("foofbar", &['f', 'o'], 3), None);
+        assert_eq!(
+            find_end_of_match(&Line::new(String::from("foofbar")), &['f', 'o'], 3),
+            None
+        );
 
         // find first score when multiples exist. keep in mind that
         // find_end_of_match doesn't find the _entire_ match, just the end of
         // the match given the correct starting point, so whatever `start` value
         // is provided is assumed to be the start of the match.
-        let s = "foofoofoobar";
+        let s = Line::new(String::from("foofoofoobar"));
         assert_eq!(find_end_of_match(&s, &['b'], 0), Some((10, 9)));
         assert_eq!(find_end_of_match(&s, &['b'], 4), Some((6, 9)));
         assert_eq!(find_end_of_match(&s, &['b'], 8), Some((2, 9)));
