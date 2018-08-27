@@ -32,12 +32,6 @@ mod tests {
     }
 
     #[test]
-    fn test_line_len() {
-        let l = Line::from("FOOBAR");
-        assert_eq!(l.len(), 6);
-    }
-
-    #[test]
     fn test_low_char_vec() {
         let l = Line::from("FOOBAR");
         for (i, c) in l.low_char_vec {
