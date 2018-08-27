@@ -87,7 +87,9 @@ fn find_end_of_match(line: &Line, chars: &[char], start: usize) -> Option<(usize
                 last_match_kind = MatchKind::Sequential;
                 score += 1;
             }
-        } else if !line.low_char_vec[index - 1].1.is_alphanumeric() {
+        } else if index < line.low_char_vec.len()
+            && !line.low_char_vec[index - 1].1.is_alphanumeric()
+        {
             if last_match_kind != MatchKind::Boundary {
                 last_match_kind = MatchKind::Boundary;
                 score += 1;
