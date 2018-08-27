@@ -113,11 +113,7 @@ impl<'a> Renderer<'a> {
     }
 
     pub fn clear(&mut self) {
-        self.console.write(
-            format!("{}\r\n", clear::CurrentLine)
-                .repeat(self.num_rendered)
-                .as_str(),
-        );
+        self.console.write(&format!("\r{}", clear::AfterCursor));
     }
 }
 
