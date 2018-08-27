@@ -2,6 +2,7 @@ extern crate clap;
 extern crate libc;
 extern crate termion;
 extern crate termios;
+extern crate unicode_width;
 
 mod console;
 mod event_loop;
