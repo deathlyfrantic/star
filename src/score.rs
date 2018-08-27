@@ -72,11 +72,17 @@ fn find_end_of_match(line: &Line, chars: &[char], start: usize) -> Option<(usize
     let mut score = 1;
     let mut last_match_kind = MatchKind::Normal;
 
-    for c in chars {
+    for c in chars
+        .iter()
+        .collect::<String>()
+        .as_str()
+        .to_lowercase()
+        .chars()
+    {
         let index = match line
             .low_char_vec
             .iter()
-            .find(|t| t.0 > last_index && c == &t.1)
+            .find(|t| t.0 > last_index && c == t.1)
         {
             Some(t) => t.0,
             None => return None,
