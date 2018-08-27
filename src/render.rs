@@ -39,21 +39,16 @@ impl<'a> Renderer<'a> {
 
     fn render_search_line(&self, num_scores: usize) -> String {
         format!(
-            "{:>width$} > {}",
+            "{:>width$} > {}{}",
             num_scores,
             self.query,
+            clear::UntilNewline,
             width = self.match_count_length
         )
     }
 
     pub fn render_lines(&mut self) -> Vec<String> {
-        let mut lines: Vec<String> = vec![];
-        lines.push(format!(
-            "\r{}{}",
-            self.render_search_line(self.scores.len()),
-            clear::AfterCursor
-        ));
-
+        let mut lines: Vec<String> = vec!["".to_string()]; // to account for search line
         let num_matches = min((self.height - 1) as usize, self.scores.len());
         self.num_rendered = num_matches;
 
