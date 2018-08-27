@@ -132,7 +132,7 @@ mod tests {
 
     #[test]
     fn test_highlight_score_line() {
-        let line = Line::new(String::from("xxxfoobarxxx"));
+        let line = Line::from("xxxfoobarxxx");
         let score =
             calculate_score(&line, "foobar".chars().collect::<Vec<char>>().as_slice()).unwrap();
         let expected = format!(
