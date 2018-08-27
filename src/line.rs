@@ -15,6 +15,7 @@ impl Line {
         }
     }
 
+    #[allow(dead_code)]
     pub fn from(s: &str) -> Line {
         Line::new(String::from(s))
     }
