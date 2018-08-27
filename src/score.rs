@@ -27,22 +27,22 @@ impl<'a> Score<'a> {
 }
 
 pub fn calculate_score<'a>(line: &'a Line, query: &[char]) -> Option<Score<'a>> {
-    let mut score = Score::new(line);
     match query.len() {
-        0 => Some(score),
+        0 => Some(Score::new(line)),
         1 => match line
             .low_buf
             .find(query[0].to_lowercase().to_string().as_str())
         {
-            Some(index) => {
-                score.points = 1;
-                score.last = index;
-                score.first = index;
-                Some(score)
-            }
+            Some(index) => Some(Score {
+                line: line,
+                points: 1,
+                last: index,
+                first: index,
+            }),
             None => None,
         },
         _ => {
+            let mut score = Score::new(line);
             let mut found_score = false;
             for (start, _) in line
                 .low_buf
