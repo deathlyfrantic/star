@@ -1,4 +1,5 @@
 use termion::{clear, color, cursor, style};
+use unicode_width::UnicodeWidthChar;
 
 use console;
 use score::Score;
@@ -14,6 +15,7 @@ pub struct Renderer<'a> {
     pub num_rendered: usize,
     match_count_length: usize,
     height: usize,
+    width: usize,
 }
 
 impl<'a> Renderer<'a> {
@@ -33,6 +35,7 @@ impl<'a> Renderer<'a> {
             num_rendered: 0,
             match_count_length: match_count_length,
             height: min(height, console.height as usize),
+            width: console.width as usize,
         }
     }
 
@@ -48,7 +51,7 @@ impl<'a> Renderer<'a> {
 
     fn highlight_line(&self, score: &Score, selected: bool) -> String {
         // this function highlights matches, expands tabs, and truncates lines to width
-        let mut visible_chars = 0;
+        let mut visible_chars: usize = 0;
         let mut rv = format!("{}", color::Fg(color::Reset));
         if selected {
             rv.push_str(&format!("{}", style::Invert));
@@ -65,15 +68,18 @@ impl<'a> Renderer<'a> {
                 loop {
                     rv.push(' ');
                     visible_chars += 1;
-                    if visible_chars % 8 == 0 || visible_chars >= self.console.width {
+                    if visible_chars % 8 == 0 || visible_chars >= self.width {
                         break;
                     }
                 }
-            } else if self.console.width > visible_chars {
+            } else if self.width > visible_chars {
                 rv.push(c);
-                visible_chars += 1;
+                visible_chars += match c.width() {
+                    Some(w) => w,
+                    None => 0,
+                };
             }
-            if self.console.width <= visible_chars {
+            if self.width <= visible_chars {
                 break;
             }
         }
