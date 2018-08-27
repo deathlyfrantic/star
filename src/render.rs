@@ -101,7 +101,7 @@ impl<'a> Renderer<'a> {
 
     pub fn render(&mut self) {
         let lines = self.render_lines();
-        self.console.write_lines(lines);
+        self.console.write(&lines.join("\r\n"));
         self.console.write(&format!("{}", clear::AfterCursor));
         if self.num_rendered > 0 {
             self.console

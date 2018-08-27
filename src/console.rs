@@ -39,10 +39,6 @@ impl Console {
         write!(tty, "{}{}{}", cursor::Hide, buf, cursor::Show).unwrap();
         tty.flush().unwrap();
     }
-
-    pub fn write_lines(&self, lines: Vec<String>) {
-        self.write(lines.join("\r\n").as_str());
-    }
 }
 
 impl Drop for Console {
