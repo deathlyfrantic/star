@@ -26,13 +26,14 @@ fn get_scores<'a>(
     loop {
         tmp.pop();
         if map.contains_key(&query_str(&tmp)) {
-            let new_scores = Rc::new(
-                map.get(&query_str(&tmp))
-                    .unwrap()
-                    .iter()
-                    .filter_map(|s| calculate_score(s.line, &query))
-                    .collect(),
-            );
+            let mut new_scores: Vec<Score> = map
+                .get(&query_str(&tmp))
+                .unwrap()
+                .iter()
+                .filter_map(|s| calculate_score(s.line, &query))
+                .collect();
+            new_scores.sort_unstable_by_key(|score| score.points);
+            let new_scores = Rc::new(new_scores);
             map.insert(query_str(&query), Rc::clone(&new_scores));
             return new_scores;
         }
@@ -52,23 +53,20 @@ pub fn run(
 
     if query.len() > 0 {
         // "prime" the cache with the scores for "", since an initial query was specified
-        score_map.insert(
-            "".to_string(),
-            Rc::new(
-                stdin_lines
-                    .iter()
-                    .filter_map(|l| calculate_score(l, &[]))
-                    .collect(),
-            ),
-        );
+        let mut scores: Vec<Score> = stdin_lines
+            .iter()
+            .filter_map(|l| calculate_score(l, &[]))
+            .collect();
+        scores.sort_unstable_by_key(|score| score.points);
+        score_map.insert("".to_string(), Rc::new(scores));
     }
 
-    let mut scores = Rc::new(
-        stdin_lines
-            .iter()
-            .filter_map(|l| calculate_score(l, &query))
-            .collect(),
-    );
+    let mut scores: Vec<Score> = stdin_lines
+        .iter()
+        .filter_map(|l| calculate_score(l, &query))
+        .collect();
+    scores.sort_unstable_by_key(|score| score.points);
+    let mut scores = Rc::new(scores);
     score_map.insert(query_str(&query), Rc::clone(&scores));
 
     let mut renderer = Renderer::new(
