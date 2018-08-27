@@ -19,8 +19,8 @@ fn get_scores<'a>(
     map: &mut HashMap<String, Rc<Vec<Score<'a>>>>,
     query: &[char],
 ) -> Rc<Vec<Score<'a>>> {
-    if map.contains_key(&query_str(&query)) {
-        return Rc::clone(&map.get(&query_str(&query)).unwrap());
+    if let Some(scores) = &map.get(&query_str(&query)) {
+        return Rc::clone(scores);
     }
     let mut tmp = query.to_vec();
     loop {
