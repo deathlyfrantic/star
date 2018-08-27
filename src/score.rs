@@ -48,9 +48,7 @@ pub fn calculate_score<'a>(line: &'a Line, query: &[char]) -> Option<Score<'a>> 
                 .low_buf
                 .match_indices(query[0].to_lowercase().to_string().as_str())
             {
-                if let Some((points, last_index)) =
-                    find_end_of_match(line.low_buf.as_str(), &query[1..], start)
-                {
+                if let Some((points, last_index)) = find_end_of_match(&line, &query[1..], start) {
                     found_score = true;
                     if last_index != 0 && points < score.points {
                         score.first = start;
@@ -69,14 +67,17 @@ pub fn calculate_score<'a>(line: &'a Line, query: &[char]) -> Option<Score<'a>> 
     }
 }
 
-fn find_end_of_match(line: &str, chars: &[char], start: usize) -> Option<(usize, usize)> {
+fn find_end_of_match(line: &Line, chars: &[char], start: usize) -> Option<(usize, usize)> {
     let mut last_index = start;
     let mut score = 1;
     let mut last_match_kind = MatchKind::Normal;
-    let line_chars: Vec<_> = line.char_indices().collect();
 
     for c in chars {
-        let index = match line_chars.iter().find(|t| t.0 > last_index && c == &t.1) {
+        let index = match line
+            .low_char_vec
+            .iter()
+            .find(|t| t.0 > last_index && c == &t.1)
+        {
             Some(t) => t.0,
             None => return None,
         };
@@ -86,7 +87,7 @@ fn find_end_of_match(line: &str, chars: &[char], start: usize) -> Option<(usize,
                 last_match_kind = MatchKind::Sequential;
                 score += 1;
             }
-        } else if !line_chars[index - 1].1.is_alphanumeric() {
+        } else if !line.low_char_vec[index - 1].1.is_alphanumeric() {
             if last_match_kind != MatchKind::Boundary {
                 last_match_kind = MatchKind::Boundary;
                 score += 1;
