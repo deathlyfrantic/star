@@ -169,11 +169,7 @@ mod tests {
 
     #[test]
     fn test_get_scores() {
-        let lines = vec![
-            Line::new(String::from("foo")),
-            Line::new(String::from("bar")),
-            Line::new(String::from("baz")),
-        ];
+        let lines = vec![Line::from("foo"), Line::from("bar"), Line::from("baz")];
         let mut query: Vec<char> = vec![];
         let mut map: HashMap<String, Rc<Vec<Score>>> = HashMap::new();
         let scores = Rc::new(

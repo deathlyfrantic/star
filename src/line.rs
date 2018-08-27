@@ -15,6 +15,10 @@ impl Line {
         }
     }
 
+    pub fn from(s: &str) -> Line {
+        Line::new(String::from(s))
+    }
+
     pub fn len(&self) -> usize {
         self.buf.len()
     }
@@ -26,19 +30,19 @@ mod tests {
 
     #[test]
     fn test_line_new() {
-        let l = Line::new(String::from("FOOBAR"));
+        let l = Line::from("FOOBAR");
         assert_eq!(l.low_buf, "foobar");
     }
 
     #[test]
     fn test_line_len() {
-        let l = Line::new(String::from("FOOBAR"));
+        let l = Line::from("FOOBAR");
         assert_eq!(l.len(), 6);
     }
 
     #[test]
     fn test_low_char_vec() {
-        let l = Line::new(String::from("FOOBAR"));
+        let l = Line::from("FOOBAR");
         for (i, c) in l.low_char_vec {
             assert_eq!(
                 match i {
