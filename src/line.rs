@@ -19,10 +19,6 @@ impl Line {
     pub fn from(s: &str) -> Line {
         Line::new(String::from(s))
     }
-
-    pub fn len(&self) -> usize {
-        self.buf.len()
-    }
 }
 
 #[cfg(test)]

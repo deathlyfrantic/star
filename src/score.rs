@@ -36,7 +36,7 @@ pub fn calculate_score<'a>(line: &'a Line, query: &[char]) -> Option<Score<'a>> 
             Some(index) => Some(Score {
                 line: line,
                 points: 1,
-                last: index,
+                last: index + 1,
                 first: index,
             }),
             None => None,
@@ -52,7 +52,7 @@ pub fn calculate_score<'a>(line: &'a Line, query: &[char]) -> Option<Score<'a>> 
                     found_score = true;
                     if last_index != 0 && points < score.points {
                         score.first = start;
-                        score.last = last_index;
+                        score.last = last_index + 1;
                         score.points = points;
                     }
                 }
@@ -126,7 +126,7 @@ mod tests {
         let line = Line::from("oof");
         let expected = Some(Score {
             first: 2,
-            last: 2,
+            last: 3,
             points: 1,
             line: &line,
         });
@@ -137,7 +137,7 @@ mod tests {
         let line = Line::from("foofbbar");
         let expected = Some(Score {
             first: 0,
-            last: 4,
+            last: 5,
             points: 5,
             line: &line,
         });
@@ -149,7 +149,7 @@ mod tests {
         let line = Line::from("foo / ba r");
         let expected = Some(Score {
             first: 1,
-            last: 9,
+            last: 10,
             points: 2,
             line: &line,
         });
@@ -161,7 +161,7 @@ mod tests {
         let line = Line::from("f||||||||b||||||||||||||a||||f||||||||r");
         let expected = Some(Score {
             first: 9,
-            last: 38,
+            last: 39,
             points: 2,
             line: &line,
         });
@@ -176,7 +176,7 @@ mod tests {
         let line = Line::from("foo / ba /**  r");
         let expected = Some(Score {
             first: 6,
-            last: 14,
+            last: 15,
             points: 3,
             line: &line,
         });
@@ -191,7 +191,7 @@ mod tests {
         let line = Line::from("barfoo / ba /**  r");
         let expected = Some(Score {
             first: 0,
-            last: 2,
+            last: 3,
             points: 2,
             line: &line,
         });
@@ -206,7 +206,7 @@ mod tests {
         let line = Line::from("foo / ba /**  rbar");
         let expected = Some(Score {
             first: 15,
-            last: 17,
+            last: 18,
             points: 2,
             line: &line,
         });

@@ -1,4 +1,3 @@
-use regex::{Captures, Regex};
 use termion::{clear, color, cursor, style};
 
 use console;
@@ -47,18 +46,48 @@ impl<'a> Renderer<'a> {
         )
     }
 
+    fn highlight_line(&self, score: &Score, selected: bool) -> String {
+        // this function highlights matches, expands tabs, and truncates lines to width
+        let mut visible_chars = 0;
+        let mut rv = format!("{}", color::Fg(color::Reset));
+        if selected {
+            rv.push_str(&format!("{}", style::Invert));
+        }
+        for (i, c) in score.line.buf.chars().enumerate() {
+            if score.first != score.last {
+                if score.first == i {
+                    rv.push_str(&format!("{}", color::Fg(color::Red)));
+                } else if score.last == i {
+                    rv.push_str(&format!("{}", color::Fg(color::Reset)));
+                }
+            }
+            if c == '\t' {
+                loop {
+                    rv.push(' ');
+                    visible_chars += 1;
+                    if visible_chars % 8 == 0 || visible_chars >= self.console.width {
+                        break;
+                    }
+                }
+            } else if self.console.width > visible_chars {
+                rv.push(c);
+                visible_chars += 1;
+            }
+            if self.console.width <= visible_chars {
+                break;
+            }
+        }
+        rv.push_str(&format!("{}{}", style::Reset, clear::UntilNewline));
+        rv
+    }
+
     pub fn render_lines(&mut self) -> Vec<String> {
         let mut lines: Vec<String> = vec!["".to_string()]; // to account for search line
         let num_matches = min((self.height - 1) as usize, self.scores.len());
         self.num_rendered = num_matches;
 
         for (i, score) in self.scores.iter().enumerate().take(num_matches) {
-            lines.push(highlight_score_line(
-                score,
-                self.console.width as usize,
-                self.selected == i,
-                self.query.len() != 0,
-            ));
+            lines.push(self.highlight_line(score, self.selected == i));
         }
 
         lines
@@ -67,9 +96,10 @@ impl<'a> Renderer<'a> {
     pub fn render(&mut self) {
         let lines = self.render_lines();
         self.console.write_lines(lines);
+        self.console.write(&format!("{}", clear::AfterCursor));
         if self.num_rendered > 0 {
             self.console
-                .write(format!("{}", cursor::Up(self.num_rendered as u16)).as_str());
+                .write(&format!("{}", cursor::Up(self.num_rendered as u16)));
         }
         self.console.write("\r");
         self.console
@@ -85,96 +115,7 @@ impl<'a> Renderer<'a> {
     }
 }
 
-fn highlight_score_line(score: &Score, width: usize, selected: bool, has_query: bool) -> String {
-    let truncated = score.line.buf.split_at(min(width, score.line.len())).0;
-    // need to split _after_ score.last so we include the last
-    // character in the highlighted portion
-    let (left, right) = truncated.split_at(min(truncated.len(), score.last + 1));
-    let (left, middle) = left.split_at(min(left.len(), score.first));
-    format!(
-        "{}{}{}{}{}{}{}{}",
-        if selected {
-            format!("{}", style::Invert)
-        } else {
-            "".to_string()
-        },
-        expand_tabs(left),
-        if has_query {
-            format!("{}", color::Fg(color::Red))
-        } else {
-            "".to_string()
-        },
-        expand_tabs(middle),
-        color::Fg(color::Reset),
-        expand_tabs(right),
-        style::Reset,
-        clear::UntilNewline
-    )
-}
-
-pub fn expand_tabs(line: &str) -> String {
-    let tab_width = 8;
-    let re = Regex::new(r"([^\t\n]*)\t").unwrap();
-    re.replace_all(line, |caps: &Captures| {
-        format!(
-            "{}{}",
-            &caps[1],
-            " ".repeat(tab_width - (&caps[1].len() % tab_width))
-        )
-    }).to_string()
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use line::Line;
-    use score::calculate_score;
-
-    #[test]
-    fn test_highlight_score_line() {
-        let line = Line::from("xxxfoobarxxx");
-        let score =
-            calculate_score(&line, "foobar".chars().collect::<Vec<char>>().as_slice()).unwrap();
-        let expected = format!(
-            "xxx{}foobar{}xxx{}{}",
-            color::Fg(color::Red),
-            color::Fg(color::Reset),
-            style::Reset,
-            clear::UntilNewline
-        );
-        assert_eq!(highlight_score_line(&score, 80, false, true), expected);
-
-        let expected = format!(
-            "{}xxx{}foobar{}xxx{}{}",
-            style::Invert,
-            color::Fg(color::Red),
-            color::Fg(color::Reset),
-            style::Reset,
-            clear::UntilNewline
-        );
-        assert_eq!(highlight_score_line(&score, 80, true, true), expected);
-
-        let expected = format!(
-            "xxxfoobar{}xxx{}{}",
-            color::Fg(color::Reset),
-            style::Reset,
-            clear::UntilNewline
-        );
-        assert_eq!(highlight_score_line(&score, 80, false, false), expected);
-    }
-
-    #[test]
-    fn test_expand_tabs() {
-        assert_eq!(expand_tabs("foo\tbar"), "foo     bar");
-        assert_eq!(expand_tabs("fo\tbar"), "fo      bar");
-        assert_eq!(expand_tabs("f\tbar"), "f       bar");
-        assert_eq!(
-            expand_tabs("foo\tbar\tbaz\tquux"),
-            "foo     bar     baz     quux"
-        );
-        assert_eq!(
-            expand_tabs("foo\tbar\t\tquux"),
-            "foo     bar             quux"
-        );
-    }
 }
