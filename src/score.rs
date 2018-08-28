@@ -119,6 +119,16 @@ mod tests {
 
     #[test]
     fn test_calculate_score() {
+        // test to make sure calculate_score() breaks in else clause
+        let line = Line::from("foobarflubfuzz");
+        let expected = Some(Score {
+            line: &line,
+            first: 0,
+            last: 6,
+            points: 5,
+        });
+        assert_eq!(calculate_score(&line, &['f', 'b', 'a', 'r']), expected);
+
         // test score is None if query isn't in string
         assert_eq!(calculate_score(&Line::from("foo"), &['q', 'x', 'z']), None);
 
