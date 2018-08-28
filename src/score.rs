@@ -55,6 +55,14 @@ pub fn calculate_score<'a>(line: &'a Line, query: &[char]) -> Option<Score<'a>> 
                         score.last = last_index + 1;
                         score.points = points;
                     }
+                } else {
+                    // take this string: "foobarflubfuzz" - if we're searching for "fbar", we'll
+                    // find it in the initial six chars ("foobar"), but won't find it past that.
+                    // if find_end_of_match() returns None, that means it didn't find one of the
+                    // chars it was looking for, so don't bother searching after that. i.e. we'll
+                    // search from the 'f' in "flub", won't find 'a', and thus won't bother
+                    // searching from the 'f' in fuzz
+                    break;
                 }
             }
 
