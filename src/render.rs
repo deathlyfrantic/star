@@ -121,4 +121,88 @@ impl<'a> Renderer<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use line::Line;
+    use score::calculate_score;
+
+    #[test]
+    fn test_render_search_line() {
+        let mut r = Renderer::new(Rc::new(vec![]), String::from("foobar"), 0, 5, 20, 20);
+        let expected = format!("12345 > foobar{}", clear::UntilNewline);
+        assert_eq!(r.render_search_line(12345), expected);
+
+        // test score number justification
+        let expected = format!("  123 > foobar{}", clear::UntilNewline);
+        assert_eq!(r.render_search_line(123), expected);
+
+        // test line is truncated if necessary
+        r.width = 11;
+        let expected = format!("  123 > foo{}", clear::UntilNewline);
+        assert_eq!(r.render_search_line(123), expected);
+    }
+
+    #[test]
+    fn test_highlight_line() {
+        let mut r = Renderer::new(Rc::new(vec![]), String::from("foobar"), 0, 5, 20, 20);
+        let line = Line::from("foobarbaz");
+        let score = calculate_score(&line, &['b', 'a', 'r']).unwrap();
+        let expected = format!(
+            "{}foo{}bar{}baz{}{}",
+            color::Fg(color::Reset),
+            color::Fg(color::Red),
+            color::Fg(color::Reset),
+            style::Reset,
+            clear::UntilNewline
+        );
+        assert_eq!(r.highlight_line(&score, false), expected);
+
+        // test highlighting the selected line
+        let expected = format!(
+            "{}{}foo{}bar{}baz{}{}",
+            color::Fg(color::Reset),
+            style::Invert,
+            color::Fg(color::Red),
+            color::Fg(color::Reset),
+            style::Reset,
+            clear::UntilNewline
+        );
+        assert_eq!(r.highlight_line(&score, true), expected);
+
+        // test truncation
+        r.width = 7;
+        let expected = format!(
+            "{}foo{}bar{}b{}{}",
+            color::Fg(color::Reset),
+            color::Fg(color::Red),
+            color::Fg(color::Reset),
+            style::Reset,
+            clear::UntilNewline
+        );
+        assert_eq!(r.highlight_line(&score, false), expected);
+
+        // test tab expansion
+        r.width = 100;
+        let line = Line::from("f\too\tbar");
+        let score = calculate_score(&line, &['b', 'a', 'r']).unwrap();
+        let expected = format!(
+            "{}f       oo      {}bar{}{}",
+            color::Fg(color::Reset),
+            color::Fg(color::Red),
+            style::Reset,
+            clear::UntilNewline
+        );
+        r.width = 20;
+        assert_eq!(r.highlight_line(&score, false), expected);
+
+        // test tab expansion and truncation
+        r.width = 4;
+        let line = Line::from("foo\tbar");
+        let score = calculate_score(&line, &['b', 'a', 'r']).unwrap();
+        let expected = format!(
+            "{}foo {}{}",
+            color::Fg(color::Reset),
+            style::Reset,
+            clear::UntilNewline
+        );
+        assert_eq!(r.highlight_line(&score, false), expected);
+    }
 }
