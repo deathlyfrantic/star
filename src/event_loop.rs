@@ -71,22 +71,22 @@ pub fn run(
 
     let mut renderer = Renderer::new(
         Rc::clone(&scores),
-        &console,
         query_str(&query),
         0,
         format!("{}", stdin_lines.len()).len(),
-        height,
+        min(height, console.height as usize),
+        console.width as usize,
     );
-    renderer.render();
+    console.write(&renderer.render());
 
     for c in tty.keys() {
         match c.unwrap() {
             Key::Ctrl('c') | Key::Esc => {
-                renderer.clear();
+                console.write(&renderer.clear);
                 return Err(io::Error::new(io::ErrorKind::Other, "ctrl-c"));
             }
             Key::Char('\n') => {
-                renderer.clear();
+                console.write(&renderer.clear);
                 if scores.len() == 0 {
                     return Ok(String::new());
                 }
@@ -96,20 +96,20 @@ pub fn run(
                 // move selection down
                 if renderer.selected < renderer.num_rendered - 1 {
                     renderer.selected += 1;
-                    renderer.render();
+                    console.write(&renderer.render());
                 } else if renderer.selected > 0 {
                     renderer.selected = 0;
-                    renderer.render();
+                    console.write(&renderer.render());
                 }
             }
             Key::Ctrl('p') | Key::Up => {
                 // move selection up
                 if renderer.selected > 0 {
                     renderer.selected -= 1;
-                    renderer.render();
+                    console.write(&renderer.render());
                 } else if renderer.num_rendered > 0 {
                     renderer.selected = renderer.num_rendered - 1;
-                    renderer.render()
+                    console.write(&renderer.render());
                 }
             }
             Key::Ctrl('w') => {
@@ -148,7 +148,7 @@ pub fn run(
             scores = get_scores(&mut score_map, &query);
             renderer.scores = Rc::clone(&scores);
             renderer.selected = min(renderer.selected, scores.len() - 1);
-            renderer.render();
+            console.write(&renderer.render());
         }
     }
 

@@ -2,7 +2,6 @@ use termion::{clear, color, cursor, style};
 use unicode_width::UnicodeWidthChar;
 use unicode_width::UnicodeWidthStr;
 
-use console;
 use score::Score;
 
 use std::cmp::min;
@@ -10,33 +9,33 @@ use std::rc::Rc;
 
 pub struct Renderer<'a> {
     pub scores: Rc<Vec<Score<'a>>>,
-    console: &'a console::Console,
     pub query: String,
     pub selected: usize,
     pub num_rendered: usize,
     match_count_length: usize,
     height: usize,
     width: usize,
+    pub clear: String,
 }
 
 impl<'a> Renderer<'a> {
     pub fn new(
         scores: Rc<Vec<Score<'a>>>,
-        console: &'a console::Console,
         query: String,
         selected: usize,
         match_count_length: usize,
         height: usize,
+        width: usize,
     ) -> Renderer<'a> {
         Renderer {
             scores: scores,
-            console: console,
             query: query,
             selected: selected,
             num_rendered: 0,
             match_count_length: match_count_length,
-            height: min(height, console.height as usize),
-            width: console.width as usize,
+            height: height,
+            width: width,
+            clear: format!("\r{}", clear::AfterCursor),
         }
     }
 
@@ -95,7 +94,7 @@ impl<'a> Renderer<'a> {
         rv
     }
 
-    pub fn render_lines(&mut self) -> Vec<String> {
+    fn render_lines(&mut self) -> Vec<String> {
         let mut lines: Vec<String> = vec!["".to_string()]; // to account for search line
         let num_matches = min((self.height - 1) as usize, self.scores.len());
         self.num_rendered = num_matches;
@@ -107,21 +106,15 @@ impl<'a> Renderer<'a> {
         lines
     }
 
-    pub fn render(&mut self) {
-        let lines = self.render_lines();
-        self.console.write(&lines.join("\r\n"));
-        self.console.write(&format!("{}", clear::AfterCursor));
+    pub fn render(&mut self) -> String {
+        let mut output = self.render_lines().join("\r\n");
+        output.push_str(&format!("{}", clear::AfterCursor));
         if self.num_rendered > 0 {
-            self.console
-                .write(&format!("{}", cursor::Up(self.num_rendered as u16)));
+            output.push_str(&format!("{}", cursor::Up(self.num_rendered as u16)));
         }
-        self.console.write("\r");
-        self.console
-            .write(self.render_search_line(self.scores.len()).as_str());
-    }
-
-    pub fn clear(&mut self) {
-        self.console.write(&format!("\r{}", clear::AfterCursor));
+        output.push_str("\r");
+        output.push_str(&self.render_search_line(self.scores.len()));
+        output
     }
 }
 
