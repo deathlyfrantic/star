@@ -1,5 +1,6 @@
 use termion::{clear, color, cursor, style};
 use unicode_width::UnicodeWidthChar;
+use unicode_width::UnicodeWidthStr;
 
 use console;
 use score::Score;
@@ -40,13 +41,20 @@ impl<'a> Renderer<'a> {
     }
 
     fn render_search_line(&self, num_scores: usize) -> String {
-        format!(
+        let line = format!(
             "{:>width$} > {}{}",
             num_scores,
             self.query,
             clear::UntilNewline,
             width = self.match_count_length
-        )
+        );
+        let mut rv = String::with_capacity(line.len());
+        for char in line.chars() {
+            if rv.width() < self.width {
+                rv.push(char);
+            }
+        }
+        rv
     }
 
     fn highlight_line(&self, score: &Score, selected: bool) -> String {
