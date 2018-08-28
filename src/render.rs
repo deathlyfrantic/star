@@ -41,10 +41,9 @@ impl<'a> Renderer<'a> {
 
     fn render_search_line(&self, num_scores: usize) -> String {
         let line = format!(
-            "{:>width$} > {}{}",
+            "{:>width$} > {}",
             num_scores,
             self.query,
-            clear::UntilNewline,
             width = self.match_count_length
         );
         let mut rv = String::with_capacity(line.len());
@@ -53,6 +52,7 @@ impl<'a> Renderer<'a> {
                 rv.push(char);
             }
         }
+        rv.push_str(&format!("{}", clear::UntilNewline));
         rv
     }
 
