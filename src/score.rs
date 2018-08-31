@@ -61,7 +61,7 @@ pub fn calculate_score<'a>(line: &'a Line, query: &[char]) -> Option<Score<'a>> 
                     // if find_end_of_match() returns None, that means it didn't find one of the
                     // chars it was looking for, so don't bother searching after that. i.e. we'll
                     // search from the 'f' in "flub", won't find 'a', and thus won't bother
-                    // searching from the 'f' in fuzz
+                    // searching from the 'f' in "fuzz"
                     break;
                 }
             }
