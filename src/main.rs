@@ -49,22 +49,19 @@ fn main() {
                 .help("Specify UI height in lines (including prompt)")
                 .takes_value(true)
                 .default_value("21"),
-        )
-        .arg(
+        ).arg(
             Arg::with_name("search")
                 .short("s")
                 .long("search")
                 .help("Specify an initial search string")
                 .takes_value(true)
                 .default_value(""),
-        )
-        .arg(
+        ).arg(
             Arg::with_name("version")
                 .short("v")
                 .long("version")
                 .help("Output version information then exit"),
-        )
-        .get_matches();
+        ).get_matches();
 
     if matches.is_present("version") {
         println!("0.1.0");
