@@ -82,11 +82,11 @@ pub fn run(
     for c in tty.keys() {
         match c.unwrap() {
             Key::Ctrl('c') | Key::Esc => {
-                console.write(&renderer.clear);
+                console.write(&Renderer::clear());
                 return Err(io::Error::new(io::ErrorKind::Other, "ctrl-c"));
             }
             Key::Char('\n') => {
-                console.write(&renderer.clear);
+                console.write(&Renderer::clear());
                 if scores.len() == 0 {
                     return Ok(String::new());
                 }

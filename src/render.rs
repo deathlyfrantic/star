@@ -15,7 +15,6 @@ pub struct Renderer<'a> {
     match_count_length: usize,
     height: usize,
     width: usize,
-    pub clear: String,
 }
 
 impl<'a> Renderer<'a> {
@@ -35,7 +34,6 @@ impl<'a> Renderer<'a> {
             match_count_length: match_count_length,
             height: height,
             width: width,
-            clear: format!("\r{}", clear::AfterCursor),
         }
     }
 
@@ -115,6 +113,10 @@ impl<'a> Renderer<'a> {
         output.push_str("\r");
         output.push_str(&self.render_search_line(self.scores.len()));
         output
+    }
+
+    pub fn clear() -> String {
+        format!("\r{}", clear::AfterCursor)
     }
 }
 
