@@ -22,7 +22,7 @@ fn actual_program<'a>(initial_search: &'a str, height: usize) {
     let stdin_lines: Vec<Line> = stdin
         .lock()
         .lines()
-        .filter_map(|l| (l.ok()))
+        .filter_map(|l| l.ok())
         .map(|l| Line::new(l))
         .collect();
     let stdin_lines = Box::new(stdin_lines);
