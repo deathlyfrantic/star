@@ -55,7 +55,8 @@ fn main() {
                 .long("search")
                 .help("Specify an initial search string")
                 .takes_value(true)
-                .default_value(""),
+                .default_value("")
+                .hide_default_value(true),
         ).arg(
             Arg::with_name("version")
                 .short("v")
