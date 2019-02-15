@@ -2,7 +2,7 @@ use termion::{clear, color, cursor, style};
 use unicode_width::UnicodeWidthChar;
 use unicode_width::UnicodeWidthStr;
 
-use score::Score;
+use crate::score::Score;
 
 use std::cmp::min;
 use std::rc::Rc;
@@ -123,8 +123,8 @@ impl<'a> Renderer<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use line::Line;
-    use score::calculate_score;
+    use crate::line::Line;
+    use crate::score::calculate_score;
 
     #[test]
     fn test_render_search_line() {
