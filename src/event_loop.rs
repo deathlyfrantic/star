@@ -72,7 +72,6 @@ pub fn run(
     let mut renderer = Renderer::new(
         Rc::clone(&scores),
         query_str(&query),
-        0,
         format!("{}", stdin_lines.len()).len(),
         min(height, console.height as usize),
         console.width as usize,
