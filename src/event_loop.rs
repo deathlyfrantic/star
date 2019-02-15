@@ -132,9 +132,11 @@ pub fn run(
                 need_new_scores = query.len() > 0;
                 query.clear();
             }
-            Key::Backspace => if let Some(_) = query.pop() {
-                need_new_scores = true;
-            },
+            Key::Backspace => {
+                if let Some(_) = query.pop() {
+                    need_new_scores = true;
+                }
+            }
             Key::Char(c) => {
                 query.push(c);
                 need_new_scores = true;
