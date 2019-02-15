@@ -6,12 +6,12 @@ pub struct Line {
 }
 
 impl Line {
-    pub fn new(s: String) -> Line {
-        let s_lowered = s.to_lowercase();
+    pub fn new(buf: String) -> Line {
+        let low_buf = buf.to_lowercase();
         Line {
-            low_char_vec: s_lowered.char_indices().collect(),
-            low_buf: s_lowered,
-            buf: s,
+            low_char_vec: low_buf.char_indices().collect(),
+            low_buf,
+            buf,
         }
     }
 

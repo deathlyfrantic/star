@@ -27,10 +27,10 @@ impl Console {
         tcsetattr(tty.as_raw_fd(), TCSANOW, &mut termios)?;
 
         Ok(Console {
-            width: width,
-            height: height,
-            original_state: original_state,
-            tty: tty,
+            width,
+            height,
+            original_state,
+            tty,
         })
     }
 
