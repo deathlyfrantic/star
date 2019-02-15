@@ -27,13 +27,13 @@ impl<'a> Renderer<'a> {
         width: usize,
     ) -> Renderer<'a> {
         Renderer {
-            scores: scores,
-            query: query,
-            selected: selected,
+            scores,
+            query,
+            selected,
             num_rendered: 0,
-            match_count_length: match_count_length,
-            height: height,
-            width: width,
+            match_count_length,
+            height,
+            width,
         }
     }
 

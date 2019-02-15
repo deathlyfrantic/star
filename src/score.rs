@@ -21,7 +21,7 @@ impl<'a> Score<'a> {
             first: 0,
             last: 0,
             points: usize::max_value(),
-            line: line,
+            line,
         }
     }
 }
@@ -34,7 +34,7 @@ pub fn calculate_score<'a>(line: &'a Line, query: &[char]) -> Option<Score<'a>> 
             .find(query[0].to_lowercase().to_string().as_str())
         {
             Some(index) => Some(Score {
-                line: line,
+                line,
                 points: 1,
                 last: index + 1,
                 first: index,
