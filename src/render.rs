@@ -21,7 +21,6 @@ impl<'a> Renderer<'a> {
     pub fn new(
         scores: Rc<Vec<Score<'a>>>,
         query: String,
-        selected: usize,
         match_count_length: usize,
         height: usize,
         width: usize,
@@ -29,7 +28,7 @@ impl<'a> Renderer<'a> {
         Renderer {
             scores,
             query,
-            selected,
+            selected: 0,
             num_rendered: 0,
             match_count_length,
             height,
@@ -128,7 +127,7 @@ mod tests {
 
     #[test]
     fn test_render_search_line() {
-        let mut r = Renderer::new(Rc::new(vec![]), String::from("foobar"), 0, 5, 20, 20);
+        let mut r = Renderer::new(Rc::new(vec![]), String::from("foobar"), 5, 20, 20);
         let expected = format!("12345 > foobar{}", clear::UntilNewline);
         assert_eq!(r.render_search_line(12345), expected);
 
@@ -144,7 +143,7 @@ mod tests {
 
     #[test]
     fn test_highlight_line() {
-        let mut r = Renderer::new(Rc::new(vec![]), String::from("foobar"), 0, 5, 20, 20);
+        let mut r = Renderer::new(Rc::new(vec![]), String::from("foobar"), 5, 20, 20);
         let line = Line::from("foobarbaz");
         let score = calculate_score(&line, &['b', 'a', 'r']).unwrap();
         let expected = format!(
