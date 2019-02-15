@@ -15,7 +15,7 @@ use line::Line;
 use std::io::{self, BufRead};
 use std::process::exit;
 
-fn actual_program<'a>(initial_search: &'a str, height: usize) {
+fn run(initial_search: &str, height: usize) {
     let stdin = io::stdin();
     let stdin_lines: Vec<Line> = stdin
         .lock()
@@ -83,5 +83,5 @@ fn main() {
         None => "",
     };
 
-    actual_program(search, height);
+    run(search, height);
 }
