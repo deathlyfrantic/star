@@ -148,7 +148,9 @@ pub fn run(
             renderer.query = query_str(&query);
             scores = get_scores(&mut score_map, &query);
             renderer.scores = Rc::clone(&scores);
-            renderer.selected = min(renderer.selected, scores.len() - 1);
+            if scores.len() > 0 {
+                renderer.selected = min(renderer.selected, scores.len() - 1);
+            }
             console.write(&renderer.render());
         }
     }
