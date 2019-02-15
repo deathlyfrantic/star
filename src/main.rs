@@ -1,8 +1,6 @@
-extern crate clap;
-extern crate libc;
-extern crate termion;
-extern crate termios;
-extern crate unicode_width;
+use clap;
+use libc;
+use termion;
 
 mod console;
 mod event_loop;

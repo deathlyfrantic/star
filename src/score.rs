@@ -1,4 +1,4 @@
-use line::Line;
+use crate::line::Line;
 
 #[derive(Debug, PartialEq)]
 enum MatchKind {

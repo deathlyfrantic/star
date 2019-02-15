@@ -2,6 +2,7 @@
 name = "star"
 version = "0.1.0"
 authors = ["Zandr Martin <git@zandr.me>"]
+edition = "2018"
 
 [dependencies]
 termion = "1.5.1"

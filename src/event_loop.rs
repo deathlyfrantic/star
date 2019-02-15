@@ -1,10 +1,10 @@
 use termion::event::Key;
 use termion::input::TermRead;
 
-use console::Console;
-use line::Line;
-use render::Renderer;
-use score::{calculate_score, Score};
+use crate::console::Console;
+use crate::line::Line;
+use crate::render::Renderer;
+use crate::score::{calculate_score, Score};
 
 use std::cmp::min;
 use std::collections::HashMap;
