@@ -2,6 +2,7 @@ use termion::{clear, color, cursor, style};
 use unicode_width::UnicodeWidthChar;
 use unicode_width::UnicodeWidthStr;
 
+use crate::color::Colors;
 use crate::score::Score;
 
 use std::cmp::min;
@@ -12,9 +13,11 @@ pub struct Renderer<'a> {
     pub query: String,
     pub selected: usize,
     pub num_rendered: usize,
-    match_count_length: usize,
     height: usize,
     width: usize,
+    fg: Colors,
+    bg: Colors,
+    match_count_length: usize,
 }
 
 impl<'a> Renderer<'a> {
@@ -22,8 +25,8 @@ impl<'a> Renderer<'a> {
         scores: Rc<Vec<Score<'a>>>,
         query: String,
         match_count_length: usize,
-        height: usize,
-        width: usize,
+        colors: (Colors, Colors),
+        dimensions: (usize, usize),
     ) -> Renderer<'a> {
         Renderer {
             scores,
@@ -31,8 +34,10 @@ impl<'a> Renderer<'a> {
             selected: 0,
             num_rendered: 0,
             match_count_length,
-            height,
-            width,
+            fg: colors.0,
+            bg: colors.1,
+            width: dimensions.0,
+            height: dimensions.1,
         }
     }
 
@@ -56,16 +61,27 @@ impl<'a> Renderer<'a> {
     fn highlight_line(&self, score: &Score, selected: bool) -> String {
         // this function highlights matches, expands tabs, and truncates lines to width
         let mut visible_chars: usize = 0;
-        let mut rv = format!("{}", color::Fg(color::Reset));
+        let mut rv = format!("{}{}", self.fg.normal, self.bg.normal);
         if selected {
-            rv.push_str(&format!("{}", style::Invert));
+            rv.push_str(&format!("{}{}", self.fg.selected, self.bg.selected));
         }
         for (i, c) in score.line.buf.chars().enumerate() {
             if score.first != score.last {
                 if score.first == i {
-                    rv.push_str(&format!("{}", color::Fg(color::Red)));
+                    if selected {
+                        rv.push_str(&format!(
+                            "{}{}",
+                            self.fg.matched_selected, self.bg.matched_selected
+                        ));
+                    } else {
+                        rv.push_str(&format!("{}{}", self.fg.matched, self.bg.matched));
+                    }
                 } else if score.last == i {
-                    rv.push_str(&format!("{}", color::Fg(color::Reset)));
+                    if selected {
+                        rv.push_str(&format!("{}{}", self.fg.selected, self.bg.selected));
+                    } else {
+                        rv.push_str(&format!("{}{}", self.fg.normal, self.bg.normal));
+                    }
                 }
             }
             if c == '\t' {
@@ -87,7 +103,13 @@ impl<'a> Renderer<'a> {
                 break;
             }
         }
-        rv.push_str(&format!("{}{}", style::Reset, clear::UntilNewline));
+        rv.push_str(&format!(
+            "{}{}{}{}",
+            color::Fg(color::Reset),
+            color::Bg(color::Reset),
+            style::Reset,
+            clear::UntilNewline
+        ));
         rv
     }
 
@@ -122,12 +144,25 @@ impl<'a> Renderer<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::color::get_colors;
     use crate::line::Line;
     use crate::score::calculate_score;
+    use clap;
+
+    fn colors() -> (Colors, Colors) {
+        let matches = clap::ArgMatches::new();
+        get_colors(&matches).unwrap()
+    }
 
     #[test]
     fn test_render_search_line() {
-        let mut r = Renderer::new(Rc::new(vec![]), String::from("foobar"), 5, 20, 20);
+        let mut r = Renderer::new(
+            Rc::new(vec![]),
+            String::from("foobar"),
+            5,
+            colors(),
+            (20, 20),
+        );
         let expected = format!("12345 > foobar{}", clear::UntilNewline);
         assert_eq!(r.render_search_line(12345), expected);
 
@@ -143,14 +178,24 @@ mod tests {
 
     #[test]
     fn test_highlight_line() {
-        let mut r = Renderer::new(Rc::new(vec![]), String::from("foobar"), 5, 20, 20);
+        let mut r = Renderer::new(
+            Rc::new(vec![]),
+            String::from("foobar"),
+            5,
+            colors(),
+            (20, 20),
+        );
         let line = Line::from("foobarbaz");
         let score = calculate_score(&line, &['b', 'a', 'r']).unwrap();
         let expected = format!(
-            "{}foo{}bar{}baz{}{}",
+            "{}{}foo{}bar{}{}baz{}{}{}{}",
             color::Fg(color::Reset),
+            color::Bg(color::Reset),
             color::Fg(color::Red),
             color::Fg(color::Reset),
+            color::Bg(color::Reset),
+            color::Fg(color::Reset),
+            color::Bg(color::Reset),
             style::Reset,
             clear::UntilNewline
         );
@@ -158,11 +203,16 @@ mod tests {
 
         // test highlighting the selected line
         let expected = format!(
-            "{}{}foo{}bar{}baz{}{}",
+            "{}{}{}{}foo{}bar{}{}baz{}{}{}{}",
+            color::Fg(color::Reset),
+            color::Bg(color::Reset),
             color::Fg(color::Reset),
             style::Invert,
             color::Fg(color::Red),
             color::Fg(color::Reset),
+            style::Invert,
+            color::Fg(color::Reset),
+            color::Bg(color::Reset),
             style::Reset,
             clear::UntilNewline
         );
@@ -171,10 +221,14 @@ mod tests {
         // test truncation
         r.width = 7;
         let expected = format!(
-            "{}foo{}bar{}b{}{}",
+            "{}{}foo{}bar{}{}b{}{}{}{}",
             color::Fg(color::Reset),
+            color::Bg(color::Reset),
             color::Fg(color::Red),
             color::Fg(color::Reset),
+            color::Bg(color::Reset),
+            color::Fg(color::Reset),
+            color::Bg(color::Reset),
             style::Reset,
             clear::UntilNewline
         );
@@ -185,9 +239,12 @@ mod tests {
         let line = Line::from("f\too\tbar");
         let score = calculate_score(&line, &['b', 'a', 'r']).unwrap();
         let expected = format!(
-            "{}f       oo      {}bar{}{}",
+            "{}{}f       oo      {}bar{}{}{}{}",
             color::Fg(color::Reset),
+            color::Bg(color::Reset),
             color::Fg(color::Red),
+            color::Fg(color::Reset),
+            color::Bg(color::Reset),
             style::Reset,
             clear::UntilNewline
         );
@@ -199,8 +256,11 @@ mod tests {
         let line = Line::from("foo\tbar");
         let score = calculate_score(&line, &['b', 'a', 'r']).unwrap();
         let expected = format!(
-            "{}foo {}{}",
+            "{}{}foo {}{}{}{}",
             color::Fg(color::Reset),
+            color::Bg(color::Reset),
+            color::Fg(color::Reset),
+            color::Bg(color::Reset),
             style::Reset,
             clear::UntilNewline
         );

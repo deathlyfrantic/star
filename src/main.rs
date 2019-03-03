@@ -2,6 +2,7 @@ use clap;
 use libc;
 use termion;
 
+mod color;
 mod console;
 mod event_loop;
 mod line;
@@ -10,12 +11,22 @@ mod score;
 
 use clap::{App, Arg};
 
+use color::{get_colors, Colors};
 use line::Line;
 
-use std::io::{self, BufRead};
+use std::io::{self, BufRead, Error, ErrorKind};
 use std::process::exit;
 
-fn run(initial_search: &str, height: usize) {
+fn error_exit(err: Error) {
+    unsafe {
+        println!("{}", termion::clear::CurrentLine);
+        eprintln!("{}", err);
+        libc::killpg(libc::getpgrp(), libc::SIGINT);
+        exit(1);
+    }
+}
+
+fn run(initial_search: &str, height: usize, colors: (Colors, Colors)) {
     let stdin = io::stdin();
     let stdin_lines: Vec<Line> = stdin
         .lock()
@@ -24,14 +35,9 @@ fn run(initial_search: &str, height: usize) {
         .map(|l| Line::new(l))
         .collect();
     let stdin_lines = Box::new(stdin_lines);
-
-    match event_loop::run(stdin_lines, initial_search, height) {
+    match event_loop::run(stdin_lines, initial_search, height, colors) {
         Ok(l) => println!("{}", l),
-        Err(_) => unsafe {
-            println!("{}", termion::clear::CurrentLine);
-            libc::killpg(libc::getpgrp(), libc::SIGINT);
-            exit(1);
-        },
+        Err(e) => error_exit(e),
     };
 }
 
@@ -58,30 +64,73 @@ fn main() {
                 .hide_default_value(true),
         )
         .arg(
-            Arg::with_name("version")
-                .short("v")
-                .long("version")
-                .help("Output version information then exit"),
+            Arg::with_name("color-normal-fg")
+                .long("color-normal-fg")
+                .help("Foreground color of normal text")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("color-normal-bg")
+                .long("color-normal-bg")
+                .help("Background color of normal text")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("color-matched-fg")
+                .long("color-matched-fg")
+                .help("Foreground color of matched text")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("color-matched-bg")
+                .long("color-matched-bg")
+                .help("Background color of matched text")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("color-selected-fg")
+                .long("color-selected-fg")
+                .help("Foreground color of selected line")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("color-selected-bg")
+                .long("color-selected-bg")
+                .help("Background color of selected line")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("color-matched-selected-fg")
+                .long("color-matched-selected-fg")
+                .help("Foreground color of matched text on selected line")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("color-matched-selected-bg")
+                .long("color-matched-selected-bg")
+                .help("Background color of matched text on selected line")
+                .takes_value(true),
         )
         .get_matches();
-
-    if matches.is_present("version") {
-        println!("0.1.0");
-        exit(0);
-    }
-
     let height = match matches.value_of("height") {
         Some(h) => match h.parse::<usize>() {
             Ok(h) => h,
-            Err(_) => 21,
+            Err(_) => {
+                return error_exit(Error::new(
+                    ErrorKind::InvalidInput,
+                    format!("invalid height specification: \"{}\"", h),
+                ));
+            }
         },
         None => 21,
     };
-
     let search = match matches.value_of("search") {
         Some(s) => s,
         None => "",
     };
-
-    run(search, height);
+    let colors = match get_colors(&matches) {
+        Ok(c) => c,
+        Err(e) => return error_exit(e),
+    };
+    run(search, height, colors);
 }

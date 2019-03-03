@@ -1,6 +1,7 @@
 use termion::event::Key;
 use termion::input::TermRead;
 
+use crate::color::Colors;
 use crate::console::Console;
 use crate::line::Line;
 use crate::render::Renderer;
@@ -44,6 +45,7 @@ pub fn run(
     stdin_lines: Box<Vec<Line>>,
     initial_search: &str,
     height: usize,
+    colors: (Colors, Colors),
 ) -> Result<String, io::Error> {
     let console = Console::new()?;
     let ref tty = console.tty;
@@ -73,8 +75,8 @@ pub fn run(
         Rc::clone(&scores),
         query_str(&query),
         format!("{}", stdin_lines.len()).len(),
-        min(height, console.height as usize),
-        console.width as usize,
+        colors,
+        (console.width as usize, min(height, console.height as usize)),
     );
     console.write(&renderer.render());
 
@@ -82,7 +84,7 @@ pub fn run(
         match c.unwrap() {
             Key::Ctrl('c') | Key::Esc => {
                 console.write(&Renderer::clear());
-                return Err(io::Error::new(io::ErrorKind::Other, "ctrl-c"));
+                return Err(io::Error::new(io::ErrorKind::Other, ""));
             }
             Key::Char('\n') => {
                 console.write(&Renderer::clear());
