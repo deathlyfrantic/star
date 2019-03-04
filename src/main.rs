@@ -27,14 +27,14 @@ fn error_exit(err: Error) {
 }
 
 fn run(initial_search: &str, height: usize, colors: (Colors, Colors)) {
-    let stdin = io::stdin();
-    let stdin_lines: Vec<Line> = stdin
-        .lock()
-        .lines()
-        .filter_map(|l| l.ok())
-        .map(|l| Line::new(l))
-        .collect();
-    let stdin_lines = Box::new(stdin_lines);
+    let stdin_lines: Box<Vec<Line>> = Box::new(
+        io::stdin()
+            .lock()
+            .lines()
+            .filter_map(|l| l.ok())
+            .map(|l| Line::new(l))
+            .collect(),
+    );
     match event_loop::run(stdin_lines, initial_search, height, colors) {
         Ok(l) => println!("{}", l),
         Err(e) => error_exit(e),
