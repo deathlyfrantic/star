@@ -1,16 +1,12 @@
-use termion::event::Key;
-use termion::input::TermRead;
-
-use crate::color::Colors;
-use crate::console::Console;
-use crate::line::Line;
-use crate::render::Renderer;
-use crate::score::{calculate_score, Score};
-
-use std::cmp::min;
-use std::collections::HashMap;
-use std::io;
-use std::rc::Rc;
+use crate::{
+    color::Colors,
+    console::Console,
+    line::Line,
+    render::Renderer,
+    score::{calculate_score, Score},
+};
+use std::{cmp::min, collections::HashMap, io, rc::Rc};
+use termion::{event::Key, input::TermRead};
 
 fn query_str(query: &[char]) -> String {
     query.iter().collect::<String>()

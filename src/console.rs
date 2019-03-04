@@ -1,11 +1,12 @@
 use libc::{c_ushort, ioctl, TIOCGWINSZ};
+use std::{
+    fs::File,
+    io::{self, Write},
+    mem,
+    os::unix::io::{AsRawFd, RawFd},
+};
 use termion::{self, cursor};
 use termios::{cfmakeraw, tcsetattr, Termios, ECHO, ICANON, TCSANOW};
-
-use std::fs::File;
-use std::io::{self, Write};
-use std::mem;
-use std::os::unix::io::{AsRawFd, RawFd};
 
 #[derive(Debug)]
 pub struct Console {
