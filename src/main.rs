@@ -1,7 +1,3 @@
-use clap;
-use libc;
-use termion;
-
 mod color;
 mod console;
 mod event_loop;
@@ -9,13 +5,15 @@ mod line;
 mod render;
 mod score;
 
+use crate::line::Line;
 use clap::{App, Arg};
-
 use color::{get_colors, Colors};
-use line::Line;
-
-use std::io::{self, BufRead, Error, ErrorKind};
-use std::process::exit;
+use libc;
+use std::{
+    io::{self, BufRead, Error, ErrorKind},
+    process::exit,
+};
+use termion;
 
 fn error_exit(err: Error) {
     unsafe {

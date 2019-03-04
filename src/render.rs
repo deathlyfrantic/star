@@ -1,12 +1,7 @@
+use crate::{color::Colors, score::Score};
+use std::{cmp::min, rc::Rc};
 use termion::{clear, color, cursor, style};
-use unicode_width::UnicodeWidthChar;
-use unicode_width::UnicodeWidthStr;
-
-use crate::color::Colors;
-use crate::score::Score;
-
-use std::cmp::min;
-use std::rc::Rc;
+use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
 
 pub struct Renderer<'a> {
     pub scores: Rc<Vec<Score<'a>>>,
