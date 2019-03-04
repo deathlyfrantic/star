@@ -29,18 +29,15 @@ impl<'a> Score<'a> {
 pub fn calculate_score<'a>(line: &'a Line, query: &[char]) -> Option<Score<'a>> {
     match query.len() {
         0 => Some(Score::new(line)),
-        1 => match line
+        1 => line
             .low_buf
             .find(query[0].to_lowercase().to_string().as_str())
-        {
-            Some(index) => Some(Score {
+            .map(|index| Score {
                 line,
                 points: 1,
                 last: index + 1,
                 first: index,
             }),
-            None => None,
-        },
         _ => {
             let mut score = Score::new(line);
             let mut found_score = false;
