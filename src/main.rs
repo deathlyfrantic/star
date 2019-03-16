@@ -6,7 +6,7 @@ mod render;
 mod score;
 
 use crate::line::Line;
-use clap::{App, Arg};
+use clap::{crate_authors, crate_description, crate_name, crate_version, App, Arg};
 use color::{get_colors, Colors};
 use libc;
 use std::{
@@ -40,10 +40,10 @@ fn run(initial_search: &str, height: usize, colors: (Colors, Colors)) {
 }
 
 fn main() {
-    let matches = App::new("star")
-        .version("0.1.0")
-        .author("Zandr Martin")
-        .about("A recreation of Gary Bernhardt's Selecta, written in Rust")
+    let matches = App::new(crate_name!())
+        .version(crate_version!())
+        .author(crate_authors!())
+        .about(crate_description!())
         .arg(
             Arg::with_name("height")
                 .short("H")
