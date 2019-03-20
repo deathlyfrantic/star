@@ -122,10 +122,7 @@ fn main() {
         },
         None => 21,
     };
-    let search = match matches.value_of("search") {
-        Some(s) => s,
-        None => "",
-    };
+    let search = matches.value_of("search").unwrap_or("");
     let colors = match get_colors(&matches) {
         Ok(c) => c,
         Err(e) => return error_exit(e),
