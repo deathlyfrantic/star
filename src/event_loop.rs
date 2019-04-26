@@ -153,8 +153,7 @@ pub fn run(
         }
     }
 
-    // should never get here but the compiler doesn't know that
-    Ok("".to_string())
+    unreachable!();
 }
 
 #[cfg(test)]
