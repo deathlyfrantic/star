@@ -42,7 +42,7 @@ pub fn run(
     initial_search: &str,
     height: usize,
     colors: (Colors, Colors),
-) -> Result<String, io::Error> {
+) -> io::Result<String> {
     let console = Console::new()?;
     let ref tty = console.tty;
     let mut query: Vec<char> = initial_search.chars().collect();

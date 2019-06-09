@@ -1,5 +1,5 @@
 use clap::ArgMatches;
-use std::io::{Error, ErrorKind};
+use std::io::{Error, ErrorKind, Result};
 use termion::{color, style};
 
 pub struct Colors {
@@ -27,7 +27,7 @@ fn default_bg() -> Colors {
     }
 }
 
-fn parse_hex_color(color: &str) -> Result<u8, Error> {
+fn parse_hex_color(color: &str) -> Result<u8> {
     match u8::from_str_radix(color, 16) {
         Ok(n) => Ok(n),
         Err(_) => Err(Error::new(
@@ -37,7 +37,7 @@ fn parse_hex_color(color: &str) -> Result<u8, Error> {
     }
 }
 
-fn parse_rgb_color(color: &str) -> Result<color::Rgb, Error> {
+fn parse_rgb_color(color: &str) -> Result<color::Rgb> {
     if color.len() != 7 {
         return Err(Error::new(
             ErrorKind::InvalidInput,
@@ -50,7 +50,7 @@ fn parse_rgb_color(color: &str) -> Result<color::Rgb, Error> {
     Ok(color::Rgb(red, green, blue))
 }
 
-fn parse_fg_color(color: &str) -> Result<String, Error> {
+fn parse_fg_color(color: &str) -> Result<String> {
     if color.starts_with('#') {
         return Ok(format!("{}", color::Fg(parse_rgb_color(color)?)));
     }
@@ -83,7 +83,7 @@ fn parse_fg_color(color: &str) -> Result<String, Error> {
     })
 }
 
-fn parse_bg_color(color: &str) -> Result<String, Error> {
+fn parse_bg_color(color: &str) -> Result<String> {
     if color.starts_with('#') {
         return Ok(format!("{}", color::Bg(parse_rgb_color(color)?)));
     }
@@ -116,7 +116,7 @@ fn parse_bg_color(color: &str) -> Result<String, Error> {
     })
 }
 
-pub fn get_colors(matches: &ArgMatches) -> Result<(Colors, Colors), Error> {
+pub fn get_colors(matches: &ArgMatches) -> Result<(Colors, Colors)> {
     let mut fg = default_fg();
     let mut bg = default_bg();
     if let Some(c) = matches.value_of("color-normal-fg") {
