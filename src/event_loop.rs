@@ -5,6 +5,7 @@ use crate::{
     render::Renderer,
     score::{calculate_score, Score},
 };
+use rayon::prelude::*;
 use std::{cmp::min, collections::HashMap, io, rc::Rc};
 use termion::{event::Key, input::TermRead};
 
@@ -26,7 +27,7 @@ fn get_scores<'a>(
             let mut new_scores: Vec<Score> = map
                 .get(&query_str(&tmp))
                 .unwrap()
-                .iter()
+                .par_iter()
                 .filter_map(|s| calculate_score(s.line, &query))
                 .collect();
             new_scores.sort_unstable_by_key(|score| score.points);
@@ -52,7 +53,7 @@ pub fn run(
     if query.len() > 0 {
         // "prime" the cache with the scores for "", since an initial query was specified
         let mut scores: Vec<Score> = stdin_lines
-            .iter()
+            .par_iter()
             .filter_map(|l| calculate_score(l, &[]))
             .collect();
         scores.sort_unstable_by_key(|score| score.points);
@@ -60,7 +61,7 @@ pub fn run(
     }
 
     let mut scores: Vec<Score> = stdin_lines
-        .iter()
+        .par_iter()
         .filter_map(|l| calculate_score(l, &query))
         .collect();
     scores.sort_unstable_by_key(|score| score.points);
