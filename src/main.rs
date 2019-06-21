@@ -40,7 +40,7 @@ fn run(initial_search: &str, height: usize, colors: (Colors, Colors)) {
 }
 
 fn main() {
-    let matches = App::new(crate_name!())
+    let mut app = App::new(crate_name!())
         .version(crate_version!())
         .author(crate_authors!())
         .about(crate_description!())
@@ -108,8 +108,12 @@ fn main() {
                 .long("color-matched-selected-bg")
                 .help("Background color of matched text on selected line")
                 .takes_value(true),
-        )
-        .get_matches();
+        );
+    if termion::is_tty(&io::stdin()) {
+        app.print_long_help().unwrap();
+        return;
+    }
+    let matches = app.get_matches();
     let height = match matches.value_of("height") {
         Some(h) => match h.parse::<usize>() {
             Ok(h) => h,
