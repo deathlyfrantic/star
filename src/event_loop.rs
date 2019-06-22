@@ -39,18 +39,18 @@ fn get_scores<'a>(
 }
 
 pub fn run(
-    stdin_lines: Box<Vec<Line>>,
+    stdin_lines: Vec<Line>,
     initial_search: &str,
     height: usize,
     colors: (Colors, Colors),
 ) -> io::Result<String> {
     let console = Console::new()?;
-    let ref tty = console.tty;
+    let tty = &console.tty;
     let mut query: Vec<char> = initial_search.chars().collect();
     let mut need_new_scores = false;
     let mut score_map: HashMap<String, Rc<Vec<Score>>> = HashMap::new();
 
-    if query.len() > 0 {
+    if !query.is_empty() {
         // "prime" the cache with the scores for "", since an initial query was specified
         let mut scores: Vec<Score> = stdin_lines
             .par_iter()
@@ -112,7 +112,7 @@ pub fn run(
             }
             Key::Ctrl('w') => {
                 // delete word
-                need_new_scores = query.len() > 0;
+                need_new_scores = !query.is_empty();
                 let mut saw_nonspace = false;
                 while let Some(c) = query.pop() {
                     if c.is_whitespace() {
@@ -127,11 +127,11 @@ pub fn run(
             }
             Key::Ctrl('u') => {
                 // delete to beginning of line
-                need_new_scores = query.len() > 0;
+                need_new_scores = !query.is_empty();
                 query.clear();
             }
             Key::Backspace => {
-                if let Some(_) = query.pop() {
+                if query.pop().is_some() {
                     need_new_scores = true;
                 }
             }

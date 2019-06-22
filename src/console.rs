@@ -21,11 +21,11 @@ impl Console {
         let tty = termion::get_tty()?;
         let (width, height) = terminal_size(tty.as_raw_fd())?;
         let mut termios = Termios::from_fd(tty.as_raw_fd())?;
-        let original_state = termios.clone();
+        let original_state = termios;
 
         cfmakeraw(&mut termios);
         termios.c_lflag &= !(ECHO | ICANON);
-        tcsetattr(tty.as_raw_fd(), TCSANOW, &mut termios)?;
+        tcsetattr(tty.as_raw_fd(), TCSANOW, &termios)?;
 
         Ok(Console {
             width,
@@ -44,7 +44,7 @@ impl Console {
 
 impl Drop for Console {
     fn drop(&mut self) {
-        tcsetattr(self.tty.as_raw_fd(), TCSANOW, &mut self.original_state).unwrap();
+        tcsetattr(self.tty.as_raw_fd(), TCSANOW, &self.original_state).unwrap();
     }
 }
 
