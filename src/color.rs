@@ -136,7 +136,7 @@ pub fn get_colors(matches: &ArgMatches) -> Result<(Colors, Colors)> {
     }
     if let Some(c) = matches.value_of("color-selected-bg") {
         bg.selected = parse_bg_color(c)?;
-        if let None = matches.value_of("color-selected-fg") {
+        if matches.value_of("color-selected-fg").is_none() {
             // if we set a background color on the selected line but don't set a foreground color,
             // then we need to clear the default foreground style::Invert. by setting it to the
             // same style as the normal fg, we ensure highlighting works correctly on selected
