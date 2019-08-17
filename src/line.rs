@@ -15,6 +15,10 @@ impl Line {
         }
     }
 
+    pub fn len(&self) -> usize {
+        self.buf.len()
+    }
+
     #[cfg(test)]
     pub fn from(s: &str) -> Line {
         Line::new(String::from(s))
@@ -29,6 +33,12 @@ mod tests {
     fn test_line_new() {
         let l = Line::from("FOOBAR");
         assert_eq!(l.low_buf, "foobar");
+    }
+
+    #[test]
+    fn test_line_length() {
+        let l = Line::from("foo");
+        assert_eq!(l.len(), 3);
     }
 
     #[test]
