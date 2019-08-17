@@ -1,4 +1,5 @@
 use crate::line::Line;
+use std::cmp::Ordering;
 
 #[derive(Debug, PartialEq)]
 enum MatchKind {
@@ -22,6 +23,22 @@ impl<'a> Score<'a> {
             last: 0,
             points: usize::max_value(),
             line,
+        }
+    }
+
+    fn range_length(&self) -> usize {
+        self.last - self.first
+    }
+
+    pub fn cmp(a: &Score, b: &Score) -> Ordering {
+        if a.points == b.points {
+            if a.range_length() == b.range_length() {
+                a.line.len().cmp(&b.line.len())
+            } else {
+                a.range_length().cmp(&b.range_length())
+            }
+        } else {
+            a.points.cmp(&b.points)
         }
     }
 }
@@ -255,5 +272,118 @@ mod tests {
         assert_eq!(find_end_of_match(&s, &['b'], 0), Some((10, 9)));
         assert_eq!(find_end_of_match(&s, &['b'], 4), Some((6, 9)));
         assert_eq!(find_end_of_match(&s, &['b'], 8), Some((2, 9)));
+    }
+
+    #[test]
+    fn test_range_length() {
+        let s = Score {
+            first: 0,
+            last: 3,
+            points: 2,
+            line: &Line::from("foobar"),
+        };
+        assert_eq!(s.range_length(), 3);
+    }
+
+    #[test]
+    fn test_ordering() {
+        // the score structs in this test might not be valid. we're just testing
+        // specific attributes so that's okay.
+        //
+        // test points
+        let a = Score {
+            first: 0,
+            last: 3,
+            points: 1,
+            line: &Line::from("foobar"),
+        };
+        let b = Score {
+            first: 0,
+            last: 3,
+            points: 2,
+            line: &Line::from("foobar"),
+        };
+        assert_eq!(Score::cmp(&a, &b), Ordering::Less);
+        let a = Score {
+            first: 0,
+            last: 3,
+            points: 3,
+            line: &Line::from("foobar"),
+        };
+        let b = Score {
+            first: 0,
+            last: 3,
+            points: 2,
+            line: &Line::from("foobar"),
+        };
+        assert_eq!(Score::cmp(&a, &b), Ordering::Greater);
+        // test range length
+        let a = Score {
+            first: 0,
+            last: 1,
+            points: 2,
+            line: &Line::from("foobar"),
+        };
+        let b = Score {
+            first: 0,
+            last: 3,
+            points: 2,
+            line: &Line::from("foobar"),
+        };
+        assert_eq!(Score::cmp(&a, &b), Ordering::Less);
+        let a = Score {
+            first: 0,
+            last: 3,
+            points: 2,
+            line: &Line::from("foobar"),
+        };
+        let b = Score {
+            first: 0,
+            last: 1,
+            points: 2,
+            line: &Line::from("foobar"),
+        };
+        assert_eq!(Score::cmp(&a, &b), Ordering::Greater);
+        // test line length
+        let a = Score {
+            first: 0,
+            last: 3,
+            points: 2,
+            line: &Line::from("fooba"),
+        };
+        let b = Score {
+            first: 0,
+            last: 3,
+            points: 2,
+            line: &Line::from("foobar"),
+        };
+        assert_eq!(Score::cmp(&a, &b), Ordering::Less);
+        let a = Score {
+            first: 0,
+            last: 3,
+            points: 2,
+            line: &Line::from("foobar"),
+        };
+        let b = Score {
+            first: 0,
+            last: 3,
+            points: 2,
+            line: &Line::from("fooba"),
+        };
+        assert_eq!(Score::cmp(&a, &b), Ordering::Greater);
+        // if points, range length and line length all match, ordering should be equal
+        let a = Score {
+            first: 0,
+            last: 3,
+            points: 2,
+            line: &Line::from("foobar"),
+        };
+        let b = Score {
+            first: 0,
+            last: 3,
+            points: 2,
+            line: &Line::from("foobar"),
+        };
+        assert_eq!(Score::cmp(&a, &b), Ordering::Equal);
     }
 }

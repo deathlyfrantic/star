@@ -30,7 +30,7 @@ fn get_scores<'a>(
                 .par_iter()
                 .filter_map(|s| calculate_score(s.line, &query))
                 .collect();
-            new_scores.sort_unstable_by_key(|score| score.points);
+            new_scores.sort_unstable_by(Score::cmp);
             let new_scores = Rc::new(new_scores);
             map.insert(query_str(&query), Rc::clone(&new_scores));
             return new_scores;
@@ -56,7 +56,7 @@ pub fn run(
             .par_iter()
             .filter_map(|l| calculate_score(l, &[]))
             .collect();
-        scores.sort_unstable_by_key(|score| score.points);
+        scores.sort_unstable_by(Score::cmp);
         score_map.insert("".to_string(), Rc::new(scores));
     }
 
@@ -64,7 +64,7 @@ pub fn run(
         .par_iter()
         .filter_map(|l| calculate_score(l, &query))
         .collect();
-    scores.sort_unstable_by_key(|score| score.points);
+    scores.sort_unstable_by(Score::cmp);
     let mut scores = Rc::new(scores);
     score_map.insert(query_str(&query), Rc::clone(&scores));
 
