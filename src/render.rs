@@ -154,15 +154,21 @@ mod tests {
         get_colors(&matches).unwrap()
     }
 
+    fn config<'a>(colors: &'a (Colors, Colors)) -> RendererConfig<'a> {
+        RendererConfig {
+            width: 20,
+            height: 20,
+            fg: &colors.0,
+            bg: &colors.1,
+            match_count_length: 5,
+        }
+    }
+
     #[test]
     fn test_render_search_line() {
-        let mut r = Renderer::new(
-            Rc::new(vec![]),
-            String::from("foobar"),
-            5,
-            colors(),
-            (20, 20),
-        );
+        let colors = colors();
+        let config = config(&colors);
+        let mut r = Renderer::new(&config, Rc::new(vec![]), String::from("foobar"), 0);
         let expected = format!("12345 > foobar{}", clear::UntilNewline);
         assert_eq!(r.render_search_line(12345), expected);
 
@@ -178,13 +184,9 @@ mod tests {
 
     #[test]
     fn test_highlight_line() {
-        let mut r = Renderer::new(
-            Rc::new(vec![]),
-            String::from("foobar"),
-            5,
-            colors(),
-            (20, 20),
-        );
+        let colors = colors();
+        let config = config(&colors);
+        let mut r = Renderer::new(&config, Rc::new(vec![]), String::from("foobar"), 0);
         let line = Line::from("foobarbaz");
         let score = calculate_score(&line, &['b', 'a', 'r']).unwrap();
         let expected = format!(
