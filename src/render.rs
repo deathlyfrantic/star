@@ -4,9 +4,9 @@ use termion::{clear, color, cursor, style};
 use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
 
 pub struct Renderer<'a> {
-    pub scores: Rc<Vec<Score<'a>>>,
-    pub query: String,
-    pub selected: usize,
+    scores: Rc<Vec<Score<'a>>>,
+    query: String,
+    selected: usize,
     height: usize,
     width: usize,
     fg: &'a Colors,
