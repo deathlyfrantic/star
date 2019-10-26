@@ -92,7 +92,7 @@ pub fn run(
             }
             Key::Ctrl('n') | Key::Down => {
                 // move selection down
-                if renderer.selected < renderer.num_rendered - 1 {
+                if renderer.selected < renderer.num_visible() - 1 {
                     renderer.selected += 1;
                     console.write(&renderer.render());
                 } else if renderer.selected > 0 {
@@ -105,8 +105,8 @@ pub fn run(
                 if renderer.selected > 0 {
                     renderer.selected -= 1;
                     console.write(&renderer.render());
-                } else if renderer.num_rendered > 0 {
-                    renderer.selected = renderer.num_rendered - 1;
+                } else if renderer.num_visible() > 0 {
+                    renderer.selected = renderer.num_visible() - 1;
                     console.write(&renderer.render());
                 }
             }
