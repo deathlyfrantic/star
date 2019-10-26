@@ -6,9 +6,9 @@ pub struct Line {
 }
 
 impl Line {
-    pub fn new(buf: String) -> Line {
+    pub fn new(buf: String) -> Self {
         let low_buf = buf.to_lowercase();
-        Line {
+        Self {
             low_char_vec: low_buf.char_indices().collect(),
             low_buf,
             buf,

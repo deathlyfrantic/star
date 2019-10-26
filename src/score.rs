@@ -17,8 +17,8 @@ pub struct Score<'a> {
 }
 
 impl<'a> Score<'a> {
-    fn new(line: &'a Line) -> Score {
-        Score {
+    fn new(line: &'a Line) -> Self {
+        Self {
             first: 0,
             last: 0,
             points: usize::max_value(),

@@ -15,7 +15,7 @@ pub struct Console {
 }
 
 impl Console {
-    pub fn new() -> io::Result<Console> {
+    pub fn new() -> io::Result<Self> {
         let tty = termion::get_tty()?;
         let (width, height) = terminal_size()?;
         let mut termios = Termios::from_fd(tty.as_raw_fd())?;
@@ -25,7 +25,7 @@ impl Console {
         termios.c_lflag &= !(ECHO | ICANON);
         tcsetattr(tty.as_raw_fd(), TCSANOW, &termios)?;
 
-        Ok(Console {
+        Ok(Self {
             width,
             height,
             original_state,
