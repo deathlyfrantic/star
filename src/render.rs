@@ -118,7 +118,7 @@ impl<'a> Renderer<'a> {
         lines
     }
 
-    pub fn render(&mut self) -> String {
+    pub fn render(&self) -> String {
         let mut output = self.render_lines().join("\r\n");
         output.push_str(&format!("{}", clear::AfterCursor));
         if self.num_visible() > 0 {
