@@ -2,7 +2,7 @@ use crate::{
     color::Colors,
     console::Console,
     line::Line,
-    render::Renderer,
+    render::{Renderer, RendererConfig},
     score::{calculate_score, Score},
 };
 use rayon::prelude::*;
@@ -68,14 +68,26 @@ pub fn run(
     let mut scores = Rc::new(scores);
     score_map.insert(query_str(&query), Rc::clone(&scores));
 
-    let mut renderer = Renderer::new(
-        Rc::clone(&scores),
-        query_str(&query),
-        format!("{}", stdin_lines.len()).len(),
-        colors,
-        (console.width as usize, min(height, console.height as usize)),
+    let renderer_config = RendererConfig {
+        width: console.width as usize,
+        height: min(height, console.height as usize),
+        fg: &colors.0,
+        bg: &colors.1,
+        match_count_length: format!("{}", stdin_lines.len()).len(),
+    };
+
+    let num_visible = |scores: &[Score]| min(renderer_config.height - 1, scores.len());
+
+    let mut selected = 0;
+    console.write(
+        &Renderer::new(
+            &renderer_config,
+            Rc::clone(&scores),
+            query_str(&query),
+            selected,
+        )
+        .render(),
     );
-    console.write(&renderer.render());
 
     for c in tty.keys() {
         match c.unwrap() {
@@ -88,26 +100,58 @@ pub fn run(
                 if scores.len() == 0 {
                     return Ok(String::new());
                 }
-                return Ok(scores[renderer.selected].line.buf.clone());
+                return Ok(scores[selected].line.buf.clone());
             }
             Key::Ctrl('n') | Key::Down => {
                 // move selection down
-                if renderer.selected < renderer.num_visible() - 1 {
-                    renderer.selected += 1;
-                    console.write(&renderer.render());
-                } else if renderer.selected > 0 {
-                    renderer.selected = 0;
-                    console.write(&renderer.render());
+                if selected < num_visible(&scores) - 1 {
+                    selected += 1;
+                    console.write(
+                        &Renderer::new(
+                            &renderer_config,
+                            Rc::clone(&scores),
+                            query_str(&query),
+                            selected,
+                        )
+                        .render(),
+                    );
+                } else if selected > 0 {
+                    selected = 0;
+                    console.write(
+                        &Renderer::new(
+                            &renderer_config,
+                            Rc::clone(&scores),
+                            query_str(&query),
+                            selected,
+                        )
+                        .render(),
+                    );
                 }
             }
             Key::Ctrl('p') | Key::Up => {
                 // move selection up
-                if renderer.selected > 0 {
-                    renderer.selected -= 1;
-                    console.write(&renderer.render());
-                } else if renderer.num_visible() > 0 {
-                    renderer.selected = renderer.num_visible() - 1;
-                    console.write(&renderer.render());
+                if selected > 0 {
+                    selected -= 1;
+                    console.write(
+                        &Renderer::new(
+                            &renderer_config,
+                            Rc::clone(&scores),
+                            query_str(&query),
+                            selected,
+                        )
+                        .render(),
+                    );
+                } else if num_visible(&scores) > 0 {
+                    selected = num_visible(&scores) - 1;
+                    console.write(
+                        &Renderer::new(
+                            &renderer_config,
+                            Rc::clone(&scores),
+                            query_str(&query),
+                            selected,
+                        )
+                        .render(),
+                    );
                 }
             }
             Key::Ctrl('w') => {
@@ -144,13 +188,19 @@ pub fn run(
 
         if need_new_scores {
             need_new_scores = false;
-            renderer.query = query_str(&query);
             scores = get_scores(&mut score_map, &query);
-            renderer.scores = Rc::clone(&scores);
             if scores.len() > 0 {
-                renderer.selected = min(renderer.selected, scores.len() - 1);
+                selected = min(selected, scores.len() - 1);
             }
-            console.write(&renderer.render());
+            console.write(
+                &Renderer::new(
+                    &renderer_config,
+                    Rc::clone(&scores),
+                    query_str(&query),
+                    selected,
+                )
+                .render(),
+            );
         }
     }
 
