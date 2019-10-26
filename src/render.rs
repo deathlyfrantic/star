@@ -22,8 +22,8 @@ impl<'a> Renderer<'a> {
         match_count_length: usize,
         colors: (Colors, Colors),
         dimensions: (usize, usize),
-    ) -> Renderer<'a> {
-        Renderer {
+    ) -> Self {
+        Self {
             scores,
             query,
             selected: 0,
