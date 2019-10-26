@@ -76,18 +76,14 @@ pub fn run(
         match_count_length: format!("{}", stdin_lines.len()).len(),
     };
 
-    let num_visible = |scores: &[Score]| min(renderer_config.height - 1, scores.len());
+    let render = |scores: Rc<Vec<Score>>, query: &[char], selected: usize| {
+        console
+            .write(&Renderer::new(&renderer_config, scores, query_str(&query), selected).render())
+    };
 
+    let num_visible = |scores: &[Score]| min(renderer_config.height - 1, scores.len());
     let mut selected = 0;
-    console.write(
-        &Renderer::new(
-            &renderer_config,
-            Rc::clone(&scores),
-            query_str(&query),
-            selected,
-        )
-        .render(),
-    );
+    render(Rc::clone(&scores), &query, selected);
 
     for c in tty.keys() {
         match c.unwrap() {
@@ -106,52 +102,20 @@ pub fn run(
                 // move selection down
                 if selected < num_visible(&scores) - 1 {
                     selected += 1;
-                    console.write(
-                        &Renderer::new(
-                            &renderer_config,
-                            Rc::clone(&scores),
-                            query_str(&query),
-                            selected,
-                        )
-                        .render(),
-                    );
+                    render(Rc::clone(&scores), &query, selected);
                 } else if selected > 0 {
                     selected = 0;
-                    console.write(
-                        &Renderer::new(
-                            &renderer_config,
-                            Rc::clone(&scores),
-                            query_str(&query),
-                            selected,
-                        )
-                        .render(),
-                    );
+                    render(Rc::clone(&scores), &query, selected);
                 }
             }
             Key::Ctrl('p') | Key::Up => {
                 // move selection up
                 if selected > 0 {
                     selected -= 1;
-                    console.write(
-                        &Renderer::new(
-                            &renderer_config,
-                            Rc::clone(&scores),
-                            query_str(&query),
-                            selected,
-                        )
-                        .render(),
-                    );
+                    render(Rc::clone(&scores), &query, selected);
                 } else if num_visible(&scores) > 0 {
                     selected = num_visible(&scores) - 1;
-                    console.write(
-                        &Renderer::new(
-                            &renderer_config,
-                            Rc::clone(&scores),
-                            query_str(&query),
-                            selected,
-                        )
-                        .render(),
-                    );
+                    render(Rc::clone(&scores), &query, selected);
                 }
             }
             Key::Ctrl('w') => {
@@ -192,15 +156,7 @@ pub fn run(
             if scores.len() > 0 {
                 selected = min(selected, scores.len() - 1);
             }
-            console.write(
-                &Renderer::new(
-                    &renderer_config,
-                    Rc::clone(&scores),
-                    query_str(&query),
-                    selected,
-                )
-                .render(),
-            );
+            render(Rc::clone(&scores), &query, selected);
         }
     }
 
