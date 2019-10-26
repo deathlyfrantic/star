@@ -9,32 +9,39 @@ pub struct Renderer<'a> {
     pub selected: usize,
     height: usize,
     width: usize,
-    fg: Colors,
-    bg: Colors,
+    fg: &'a Colors,
+    bg: &'a Colors,
     match_count_length: usize,
+}
+
+pub struct RendererConfig<'a> {
+    pub width: usize,
+    pub height: usize,
+    pub fg: &'a Colors,
+    pub bg: &'a Colors,
+    pub match_count_length: usize,
 }
 
 impl<'a> Renderer<'a> {
     pub fn new(
+        config: &'a RendererConfig,
         scores: Rc<Vec<Score<'a>>>,
         query: String,
-        match_count_length: usize,
-        colors: (Colors, Colors),
-        dimensions: (usize, usize),
+        selected: usize,
     ) -> Self {
         Self {
             scores,
             query,
-            selected: 0,
-            match_count_length,
-            fg: colors.0,
-            bg: colors.1,
-            width: dimensions.0,
-            height: dimensions.1,
+            selected,
+            match_count_length: config.match_count_length,
+            fg: config.fg,
+            bg: config.bg,
+            width: config.width,
+            height: config.height,
         }
     }
 
-    pub fn num_visible(&self) -> usize {
+    fn num_visible(&self) -> usize {
         min((self.height - 1) as usize, self.scores.len())
     }
 
