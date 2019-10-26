@@ -7,7 +7,6 @@ pub struct Renderer<'a> {
     pub scores: Rc<Vec<Score<'a>>>,
     pub query: String,
     pub selected: usize,
-    pub num_rendered: usize,
     height: usize,
     width: usize,
     fg: Colors,
@@ -27,13 +26,16 @@ impl<'a> Renderer<'a> {
             scores,
             query,
             selected: 0,
-            num_rendered: 0,
             match_count_length,
             fg: colors.0,
             bg: colors.1,
             width: dimensions.0,
             height: dimensions.1,
         }
+    }
+
+    pub fn num_visible(&self) -> usize {
+        min((self.height - 1) as usize, self.scores.len())
     }
 
     fn render_search_line(&self, num_scores: usize) -> String {
@@ -108,23 +110,19 @@ impl<'a> Renderer<'a> {
         rv
     }
 
-    fn render_lines(&mut self) -> Vec<String> {
+    fn render_lines(&self) -> Vec<String> {
         let mut lines: Vec<String> = vec!["".to_string()]; // to account for search line
-        let num_matches = min((self.height - 1) as usize, self.scores.len());
-        self.num_rendered = num_matches;
-
-        for (i, score) in self.scores.iter().enumerate().take(num_matches) {
+        for (i, score) in self.scores.iter().enumerate().take(self.num_visible()) {
             lines.push(self.highlight_line(score, self.selected == i));
         }
-
         lines
     }
 
     pub fn render(&mut self) -> String {
         let mut output = self.render_lines().join("\r\n");
         output.push_str(&format!("{}", clear::AfterCursor));
-        if self.num_rendered > 0 {
-            output.push_str(&format!("{}", cursor::Up(self.num_rendered as u16)));
+        if self.num_visible() > 0 {
+            output.push_str(&format!("{}", cursor::Up(self.num_visible() as u16)));
         }
         output.push_str("\r");
         output.push_str(&self.render_search_line(self.scores.len()));
