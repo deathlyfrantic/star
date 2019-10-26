@@ -144,9 +144,7 @@ impl<'a> Renderer<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::color::get_colors;
-    use crate::line::Line;
-    use crate::score::calculate_score;
+    use crate::{color::get_colors, line::Line, score::calculate_score};
     use clap;
 
     fn colors() -> (Colors, Colors) {
