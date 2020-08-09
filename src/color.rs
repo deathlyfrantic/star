@@ -50,92 +50,61 @@ fn parse_rgb_color(color: &str) -> Result<color::Rgb> {
     Ok(color::Rgb(red, green, blue))
 }
 
-fn parse_fg_color(color: &str) -> Result<String> {
-    if color.starts_with('#') {
-        return Ok(format!("{}", color::Fg(parse_rgb_color(color)?)));
-    }
-    if let Ok(n) = u8::from_str_radix(color, 10) {
-        return Ok(format!("{}", color::Fg(color::AnsiValue(n))));
-    }
-    Ok(match color.to_lowercase().as_str() {
-        "black" => format!("{}", color::Fg(color::Black)),
-        "blue" => format!("{}", color::Fg(color::Blue)),
-        "cyan" => format!("{}", color::Fg(color::Cyan)),
-        "green" => format!("{}", color::Fg(color::Green)),
-        "lightblack" => format!("{}", color::Fg(color::LightBlack)),
-        "lightblue" => format!("{}", color::Fg(color::LightBlue)),
-        "lightcyan" => format!("{}", color::Fg(color::LightCyan)),
-        "lightgreen" => format!("{}", color::Fg(color::LightGreen)),
-        "lightmagenta" => format!("{}", color::Fg(color::LightMagenta)),
-        "lightred" => format!("{}", color::Fg(color::LightRed)),
-        "lightwhite" => format!("{}", color::Fg(color::LightWhite)),
-        "lightyellow" => format!("{}", color::Fg(color::LightYellow)),
-        "magenta" => format!("{}", color::Fg(color::Magenta)),
-        "red" => format!("{}", color::Fg(color::Red)),
-        "white" => format!("{}", color::Fg(color::White)),
-        "yellow" => format!("{}", color::Fg(color::Yellow)),
-        _ => {
-            return Err(Error::new(
-                ErrorKind::InvalidInput,
-                format!("invalid color specification: \"{}\"", color),
-            ));
-        }
-    })
-}
-
-fn parse_bg_color(color: &str) -> Result<String> {
-    if color.starts_with('#') {
-        return Ok(format!("{}", color::Bg(parse_rgb_color(color)?)));
-    }
-    if let Ok(n) = u8::from_str_radix(color, 10) {
-        return Ok(format!("{}", color::Bg(color::AnsiValue(n))));
-    }
-    Ok(match color.to_lowercase().as_str() {
-        "black" => format!("{}", color::Bg(color::Black)),
-        "blue" => format!("{}", color::Bg(color::Blue)),
-        "cyan" => format!("{}", color::Bg(color::Cyan)),
-        "green" => format!("{}", color::Bg(color::Green)),
-        "lightblack" => format!("{}", color::Bg(color::LightBlack)),
-        "lightblue" => format!("{}", color::Bg(color::LightBlue)),
-        "lightcyan" => format!("{}", color::Bg(color::LightCyan)),
-        "lightgreen" => format!("{}", color::Bg(color::LightGreen)),
-        "lightmagenta" => format!("{}", color::Bg(color::LightMagenta)),
-        "lightred" => format!("{}", color::Bg(color::LightRed)),
-        "lightwhite" => format!("{}", color::Bg(color::LightWhite)),
-        "lightyellow" => format!("{}", color::Bg(color::LightYellow)),
-        "magenta" => format!("{}", color::Bg(color::Magenta)),
-        "red" => format!("{}", color::Bg(color::Red)),
-        "white" => format!("{}", color::Bg(color::White)),
-        "yellow" => format!("{}", color::Bg(color::Yellow)),
-        _ => {
-            return Err(Error::new(
-                ErrorKind::InvalidInput,
-                format!("invalid color specification: \"{}\"", color),
-            ));
-        }
-    })
+macro_rules! parse_color {
+    ($color:ident, $attr:tt) => {
+        if $color.starts_with('#') {
+            Ok(format!("{}", color::$attr(parse_rgb_color($color)?)))
+        } else if let Ok(n) = u8::from_str_radix($color, 10) {
+            Ok(format!("{}", color::$attr(color::AnsiValue(n))))
+        } else {
+            Ok(match $color.to_lowercase().as_str() {
+                "black" => format!("{}", color::$attr(color::Black)),
+                "blue" => format!("{}", color::$attr(color::Blue)),
+                "cyan" => format!("{}", color::$attr(color::Cyan)),
+                "green" => format!("{}", color::$attr(color::Green)),
+                "lightblack" => format!("{}", color::$attr(color::LightBlack)),
+                "lightblue" => format!("{}", color::$attr(color::LightBlue)),
+                "lightcyan" => format!("{}", color::$attr(color::LightCyan)),
+                "lightgreen" => format!("{}", color::$attr(color::LightGreen)),
+                "lightmagenta" => format!("{}", color::$attr(color::LightMagenta)),
+                "lightred" => format!("{}", color::$attr(color::LightRed)),
+                "lightwhite" => format!("{}", color::$attr(color::LightWhite)),
+                "lightyellow" => format!("{}", color::$attr(color::LightYellow)),
+                "magenta" => format!("{}", color::$attr(color::Magenta)),
+                "red" => format!("{}", color::$attr(color::Red)),
+                "white" => format!("{}", color::$attr(color::White)),
+                "yellow" => format!("{}", color::$attr(color::Yellow)),
+                _ => {
+                    return Err(Error::new(
+                        ErrorKind::InvalidInput,
+                        format!("invalid color specification: \"{}\"", $color),
+                    ));
+                }
+            })
+        } as Result<String>
+    };
 }
 
 pub fn get_colors(matches: &ArgMatches) -> Result<(Colors, Colors)> {
     let mut fg = default_fg();
     let mut bg = default_bg();
     if let Some(c) = matches.value_of("color-normal-fg") {
-        fg.normal = parse_fg_color(c)?;
+        fg.normal = parse_color!(c, Fg)?;
     }
     if let Some(c) = matches.value_of("color-matched-fg") {
-        fg.matched = parse_fg_color(c)?;
+        fg.matched = parse_color!(c, Fg)?;
     }
     if let Some(c) = matches.value_of("color-selected-fg") {
-        fg.selected = parse_fg_color(c)?;
+        fg.selected = parse_color!(c, Fg)?;
     }
     if let Some(c) = matches.value_of("color-normal-bg") {
-        bg.normal = parse_bg_color(c)?;
+        bg.normal = parse_color!(c, Bg)?;
     }
     if let Some(c) = matches.value_of("color-matched-bg") {
-        bg.matched = parse_bg_color(c)?;
+        bg.matched = parse_color!(c, Bg)?;
     }
     if let Some(c) = matches.value_of("color-selected-bg") {
-        bg.selected = parse_bg_color(c)?;
+        bg.selected = parse_color!(c, Bg)?;
         if matches.value_of("color-selected-fg").is_none() {
             // if we set a background color on the selected line but don't set a foreground color,
             // then we need to clear the default foreground style::Invert. by setting it to the
@@ -146,12 +115,12 @@ pub fn get_colors(matches: &ArgMatches) -> Result<(Colors, Colors)> {
         }
     }
     if let Some(c) = matches.value_of("color-matched-selected-fg") {
-        fg.matched_selected = parse_fg_color(c)?;
+        fg.matched_selected = parse_color!(c, Fg)?;
     } else {
         fg.matched_selected = fg.matched.clone();
     }
     if let Some(c) = matches.value_of("color-matched-selected-bg") {
-        bg.matched_selected = parse_bg_color(c)?;
+        bg.matched_selected = parse_color!(c, Bg)?;
     } else {
         bg.matched_selected = bg.selected.clone();
     }
@@ -178,16 +147,20 @@ mod tests {
         assert!(parse_rgb_color("#z7z7z7").is_err());
     }
 
+    fn test_parse_color_macro_helper(color: &str) -> Result<String> {
+        parse_color!(color, Fg)
+    }
+
     #[test]
-    fn test_parse_fg_color() {
+    fn test_parse_color_macro() {
         assert_eq!(
             format!("{}", color::Fg(color::Red)),
-            parse_fg_color("red").unwrap()
+            test_parse_color_macro_helper("red").unwrap()
         );
         assert_eq!(
             format!("{}", color::Fg(color::LightBlack)),
-            parse_fg_color("LIGHTBLACK").unwrap()
+            test_parse_color_macro_helper("LIGHTBLACK").unwrap()
         );
-        assert!(parse_fg_color("awoijf").is_err());
+        assert!(test_parse_color_macro_helper("awoijf").is_err());
     }
 }
