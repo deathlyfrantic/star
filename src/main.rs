@@ -22,14 +22,15 @@ fn error_exit(err: Error) {
     }
 }
 
-fn run(initial_search: &str, height: usize, colors: (Colors, Colors)) {
+fn run(initial_search: &str, height: usize, colors: (Colors, Colors), multiple: bool) {
     let stdin_lines: Vec<Line> = io::stdin()
         .lock()
         .lines()
         .filter_map(|l| l.ok())
-        .map(Line::new)
+        .enumerate()
+        .map(|(l, i)| Line::new(i, l))
         .collect();
-    match event_loop::run(stdin_lines, initial_search, height, colors) {
+    match event_loop::run(stdin_lines, initial_search, height, colors, multiple) {
         Ok(l) => println!("{}", l),
         Err(e) => error_exit(e),
     };
@@ -104,6 +105,25 @@ fn main() {
                 .long("color-matched-selected-bg")
                 .help("Background color of matched text on selected line")
                 .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("color-tag-fg")
+                .long("color-tag-fg")
+                .help("Foreground color of tagged indicator (+) in multiple-selection mode")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("color-tag-bg")
+                .long("color-tag-bg")
+                .help("Background color of tagged indicator (+) in multiple-selection mode")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("multiple")
+                .short("m")
+                .long("multiple")
+                .takes_value(false)
+                .help("Enable multiple selection mode"),
         );
     if termion::is_tty(&io::stdin()) {
         app.print_long_help().unwrap();
@@ -122,10 +142,11 @@ fn main() {
         },
         None => 21,
     };
+    let multiple = matches.occurrences_of("multiple") > 0;
     let search = matches.value_of("search").unwrap_or("");
     let colors = match get_colors(&matches) {
         Ok(c) => c,
         Err(e) => return error_exit(e),
     };
-    run(search, height, colors);
+    run(search, height, colors, multiple);
 }

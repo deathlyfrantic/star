@@ -12,6 +12,7 @@ pub struct Renderer<'a> {
     fg: &'a Colors,
     bg: &'a Colors,
     match_count_length: usize,
+    tagged: &'a [usize],
 }
 
 pub struct RendererConfig<'a> {
@@ -28,6 +29,7 @@ impl<'a> Renderer<'a> {
         scores: Rc<Vec<Score<'a>>>,
         query: String,
         selected: usize,
+        tagged: &'a [usize],
     ) -> Self {
         Self {
             scores,
@@ -38,6 +40,7 @@ impl<'a> Renderer<'a> {
             bg: config.bg,
             width: config.width,
             height: config.height,
+            tagged,
         }
     }
 
@@ -65,7 +68,18 @@ impl<'a> Renderer<'a> {
     fn highlight_line(&self, score: &Score, selected: bool) -> String {
         // this function highlights matches, expands tabs, and truncates lines to width
         let mut visible_chars: usize = 0;
-        let mut rv = format!("{}{}", self.fg.normal, self.bg.normal);
+        let tag = if self.tagged.contains(&score.line.index) {
+            format!(
+                "{}{} + {}{}",
+                self.fg.tag,
+                self.bg.tag,
+                color::Fg(color::Reset),
+                color::Bg(color::Reset)
+            )
+        } else {
+            String::from("")
+        };
+        let mut rv = format!("{}{}{}", tag, self.fg.normal, self.bg.normal);
         if selected {
             rv.push_str(&format!("{}{}", self.fg.selected, self.bg.selected));
         }
@@ -166,7 +180,7 @@ mod tests {
     fn test_render_search_line() {
         let colors = colors();
         let config = config(&colors);
-        let mut r = Renderer::new(&config, Rc::new(vec![]), String::from("foobar"), 0);
+        let mut r = Renderer::new(&config, Rc::new(vec![]), String::from("foobar"), 0, &[]);
         let expected = format!("12345 > foobar{}", clear::UntilNewline);
         assert_eq!(r.render_search_line(12345), expected);
 
@@ -184,7 +198,7 @@ mod tests {
     fn test_highlight_line() {
         let colors = colors();
         let config = config(&colors);
-        let mut r = Renderer::new(&config, Rc::new(vec![]), String::from("foobar"), 0);
+        let mut r = Renderer::new(&config, Rc::new(vec![]), String::from("foobar"), 0, &[]);
         let line = Line::from("foobarbaz");
         let score = calculate_score(&line, &['b', 'a', 'r']).unwrap();
         let expected = format!(
@@ -257,6 +271,29 @@ mod tests {
         let score = calculate_score(&line, &['b', 'a', 'r']).unwrap();
         let expected = format!(
             "{}{}foo {}{}{}{}",
+            color::Fg(color::Reset),
+            color::Bg(color::Reset),
+            color::Fg(color::Reset),
+            color::Bg(color::Reset),
+            style::Reset,
+            clear::UntilNewline
+        );
+        assert_eq!(r.highlight_line(&score, false), expected);
+
+        // test tagging
+        r.width = config.width;
+        r.tagged = &[9];
+        let line = Line::from("foobarbaz");
+        let score = calculate_score(&line, &['b', 'a', 'r']).unwrap();
+        let expected = format!(
+            "{}{} + {}{}{}{}foo{}bar{}{}baz{}{}{}{}",
+            colors.0.tag,
+            colors.1.tag,
+            color::Fg(color::Reset),
+            color::Bg(color::Reset),
+            color::Fg(color::Reset),
+            color::Bg(color::Reset),
+            color::Fg(color::Red),
             color::Fg(color::Reset),
             color::Bg(color::Reset),
             color::Fg(color::Reset),

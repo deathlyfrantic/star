@@ -7,6 +7,7 @@ pub struct Colors {
     pub selected: String,
     pub matched: String,
     pub matched_selected: String,
+    pub tag: String,
 }
 
 fn default_fg() -> Colors {
@@ -15,6 +16,7 @@ fn default_fg() -> Colors {
         selected: format!("{}{}", color::Fg(color::Reset), style::Invert),
         matched: format!("{}", color::Fg(color::Red)),
         matched_selected: format!("{}", color::Fg(color::Red)),
+        tag: format!("{}", color::Fg(color::LightBlue)),
     }
 }
 
@@ -24,6 +26,7 @@ fn default_bg() -> Colors {
         selected: String::new(),
         matched: String::new(),
         matched_selected: String::new(),
+        tag: String::new(),
     }
 }
 
@@ -124,6 +127,13 @@ pub fn get_colors(matches: &ArgMatches) -> Result<(Colors, Colors)> {
     } else {
         bg.matched_selected = bg.selected.clone();
     }
+    if let Some(c) = matches.value_of("color-tag-fg") {
+        println!("{}", c);
+        fg.tag = parse_color!(c, Fg)?;
+    }
+    if let Some(c) = matches.value_of("color-tag-bg") {
+        bg.tag = parse_color!(c, Bg)?;
+    };
     Ok((fg, bg))
 }
 
