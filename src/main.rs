@@ -8,12 +8,10 @@ mod score;
 use crate::line::Line;
 use clap::{crate_authors, crate_description, crate_name, crate_version, App, Arg};
 use color::{get_colors, Colors};
-use libc;
 use std::{
     io::{self, BufRead, Error, ErrorKind},
     process::exit,
 };
-use termion;
 
 fn error_exit(err: Error) {
     unsafe {
