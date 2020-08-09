@@ -1,14 +1,16 @@
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct Line {
+    pub index: usize,
     pub buf: String,
     pub low_buf: String,
     pub low_char_vec: Vec<(usize, char)>,
 }
 
 impl Line {
-    pub fn new(buf: String) -> Self {
+    pub fn new(buf: String, index: usize) -> Self {
         let low_buf = buf.to_lowercase();
         Self {
+            index,
             low_char_vec: low_buf.char_indices().collect(),
             low_buf,
             buf,
@@ -21,7 +23,7 @@ impl Line {
 
     #[cfg(test)]
     pub fn from(s: &str) -> Line {
-        Line::new(String::from(s))
+        Line::new(String::from(s), s.len())
     }
 }
 

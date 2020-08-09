@@ -43,12 +43,14 @@ pub fn run(
     initial_search: &str,
     height: usize,
     colors: (Colors, Colors),
+    multiple: bool,
 ) -> io::Result<String> {
     let console = Console::new()?;
     let tty = &console.tty;
     let mut query: Vec<char> = initial_search.chars().collect();
     let mut need_new_scores = false;
     let mut score_map: HashMap<String, Rc<Vec<Score>>> = HashMap::new();
+    let mut tagged: Vec<usize> = vec![];
 
     if !query.is_empty() {
         // "prime" the cache with the scores for "", since an initial query was specified
@@ -76,14 +78,22 @@ pub fn run(
         match_count_length: format!("{}", stdin_lines.len()).len(),
     };
 
-    let render = |scores: Rc<Vec<Score>>, query: &[char], selected: usize| {
-        console
-            .write(&Renderer::new(&renderer_config, scores, query_str(&query), selected).render())
+    let render = |scores: Rc<Vec<Score>>, query: &[char], selected: usize, tagged: &[usize]| {
+        console.write(
+            &Renderer::new(
+                &renderer_config,
+                scores,
+                query_str(&query),
+                selected,
+                tagged,
+            )
+            .render(),
+        )
     };
 
     let num_visible = |scores: &[Score]| min(renderer_config.height - 1, scores.len());
     let mut selected = 0;
-    render(Rc::clone(&scores), &query, selected);
+    render(Rc::clone(&scores), &query, selected, &tagged);
 
     for c in tty.keys() {
         match c.unwrap() {
@@ -93,29 +103,59 @@ pub fn run(
             }
             Key::Char('\n') => {
                 console.write(&Renderer::clear());
-                if scores.len() == 0 {
+                if scores.is_empty() {
                     return Ok(String::new());
                 }
                 return Ok(scores[selected].line.buf.clone());
+            }
+            Key::Alt('\r') => {
+                console.write(&Renderer::clear());
+                if scores.is_empty() {
+                    return Ok(String::new());
+                }
+                if tagged.is_empty() || !multiple {
+                    return Ok(scores[selected].line.buf.clone());
+                }
+                return Ok(tagged
+                    .iter()
+                    .map(|i| stdin_lines[*i].buf.clone())
+                    .collect::<Vec<String>>()
+                    .join("\n"));
+            }
+            Key::Char('\t') => {
+                if multiple {
+                    let line = scores[selected].line;
+                    if tagged.contains(&line.index) {
+                        if let Ok(index) = tagged.binary_search(&line.index) {
+                            tagged.remove(index);
+                        }
+                    } else {
+                        tagged.push(line.index);
+                    }
+                    render(Rc::clone(&scores), &query, selected, &tagged);
+                } else {
+                    query.push('\t');
+                    need_new_scores = true;
+                }
             }
             Key::Ctrl('n') | Key::Down => {
                 // move selection down
                 if selected < num_visible(&scores) - 1 {
                     selected += 1;
-                    render(Rc::clone(&scores), &query, selected);
+                    render(Rc::clone(&scores), &query, selected, &tagged);
                 } else if selected > 0 {
                     selected = 0;
-                    render(Rc::clone(&scores), &query, selected);
+                    render(Rc::clone(&scores), &query, selected, &tagged);
                 }
             }
             Key::Ctrl('p') | Key::Up => {
                 // move selection up
                 if selected > 0 {
                     selected -= 1;
-                    render(Rc::clone(&scores), &query, selected);
+                    render(Rc::clone(&scores), &query, selected, &tagged);
                 } else if num_visible(&scores) > 0 {
                     selected = num_visible(&scores) - 1;
-                    render(Rc::clone(&scores), &query, selected);
+                    render(Rc::clone(&scores), &query, selected, &tagged);
                 }
             }
             Key::Ctrl('w') => {
@@ -156,7 +196,7 @@ pub fn run(
             if scores.len() > 0 {
                 selected = min(selected, scores.len() - 1);
             }
-            render(Rc::clone(&scores), &query, selected);
+            render(Rc::clone(&scores), &query, selected, &tagged);
         }
     }
 
