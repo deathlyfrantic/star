@@ -128,7 +128,6 @@ pub fn get_colors(matches: &ArgMatches) -> Result<(Colors, Colors)> {
         bg.matched_selected = bg.selected.clone();
     }
     if let Some(c) = matches.value_of("color-tag-fg") {
-        println!("{}", c);
         fg.tag = parse_color!(c, Fg)?;
     }
     if let Some(c) = matches.value_of("color-tag-bg") {
