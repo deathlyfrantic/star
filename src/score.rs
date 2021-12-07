@@ -62,7 +62,7 @@ pub fn calculate_score<'a>(line: &'a Line, query: &[char]) -> Option<Score<'a>> 
                 .low_buf
                 .match_indices(query[0].to_lowercase().to_string().as_str())
             {
-                if let Some((points, last_index)) = find_end_of_match(&line, &query[1..], start) {
+                if let Some((points, last_index)) = find_end_of_match(line, &query[1..], start) {
                     found_score = true;
                     if last_index != 0 && points < score.points {
                         score.first = start;

@@ -57,7 +57,7 @@ macro_rules! parse_color {
     ($color:ident, $attr:tt) => {
         if $color.starts_with('#') {
             Ok(format!("{}", color::$attr(parse_rgb_color($color)?)))
-        } else if let Ok(n) = u8::from_str_radix($color, 10) {
+        } else if let Ok(n) = $color.parse::<u8>() {
             Ok(format!("{}", color::$attr(color::AnsiValue(n))))
         } else {
             Ok(match $color.to_lowercase().as_str() {

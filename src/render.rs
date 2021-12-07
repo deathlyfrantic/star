@@ -112,10 +112,7 @@ impl<'a> Renderer<'a> {
                 }
             } else if self.width > visible_chars {
                 rv.push(c);
-                visible_chars += match c.width() {
-                    Some(w) => w,
-                    None => 0,
-                };
+                visible_chars += c.width().unwrap_or(0);
             }
             if self.width <= visible_chars {
                 break;
@@ -145,7 +142,7 @@ impl<'a> Renderer<'a> {
         if self.num_visible() > 0 {
             output.push_str(&format!("{}", cursor::Up(self.num_visible() as u16)));
         }
-        output.push_str("\r");
+        output.push('\r');
         output.push_str(&self.render_search_line(self.scores.len()));
         output
     }

@@ -17,7 +17,7 @@ fn get_scores<'a>(
     map: &mut HashMap<String, Rc<Vec<Score<'a>>>>,
     query: &[char],
 ) -> Rc<Vec<Score<'a>>> {
-    if let Some(scores) = &map.get(&query_str(&query)) {
+    if let Some(scores) = &map.get(&query_str(query)) {
         return Rc::clone(scores);
     }
     let mut tmp = query.to_vec();
@@ -28,11 +28,11 @@ fn get_scores<'a>(
                 .get(&query_str(&tmp))
                 .unwrap()
                 .par_iter()
-                .filter_map(|s| calculate_score(s.line, &query))
+                .filter_map(|s| calculate_score(s.line, query))
                 .collect();
             new_scores.sort_unstable_by(Score::cmp);
             let new_scores = Rc::new(new_scores);
-            map.insert(query_str(&query), Rc::clone(&new_scores));
+            map.insert(query_str(query), Rc::clone(&new_scores));
             return new_scores;
         }
     }
@@ -83,7 +83,7 @@ pub fn run(
             &Renderer::new(
                 &renderer_config,
                 scores,
-                query_str(&query),
+                query_str(query),
                 selected,
                 tagged,
             )
