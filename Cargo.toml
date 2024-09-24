@@ -1,6 +1,6 @@
 [package]
 name = "star"
-version = "0.2.1"
+version = "0.2.2"
 authors = ["Zandr Martin <zandrmartin@gmail.com>"]
 description = "A fuzzy finder based on Gary Bernhardt's Selecta"
 edition = "2021"

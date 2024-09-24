@@ -45,7 +45,7 @@ impl<'a> Renderer<'a> {
     }
 
     fn num_visible(&self) -> usize {
-        min((self.height - 1) as usize, self.scores.len())
+        min(self.height - 1, self.scores.len())
     }
 
     fn render_search_line(&self, num_scores: usize) -> String {

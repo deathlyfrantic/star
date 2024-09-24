@@ -21,7 +21,7 @@ impl<'a> Score<'a> {
         Self {
             first: 0,
             last: 0,
-            points: usize::max_value(),
+            points: usize::MAX,
             line,
         }
     }

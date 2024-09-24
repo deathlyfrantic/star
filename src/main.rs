@@ -26,7 +26,7 @@ fn run(initial_search: &str, height: usize, colors: (Colors, Colors), multiple: 
     let stdin_lines: Vec<Line> = io::stdin()
         .lock()
         .lines()
-        .filter_map(|l| l.ok())
+        .map_while(Result::ok)
         .enumerate()
         .map(|(l, i)| Line::new(i, l))
         .collect();
